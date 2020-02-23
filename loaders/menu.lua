@@ -204,7 +204,6 @@ function mod:GenerateTools(tileTools)
 end
 
 function mod:GenerateIcons(tileIcons)
-    --for k,v in pairs(mod.Icons) do print(k,v,v.Z,v.Layer) end
     graphics:MassDelete(mod.Icons)
     mod.Icons = {}
     if tileIcons then
@@ -212,7 +211,6 @@ function mod:GenerateIcons(tileIcons)
         local offset = LD.Settings.ToolHolder.X+(LD.Settings.ToolHolder.SizeX-2)%34/2
         local xMax = math.floor(LD.Settings.ToolHolder.SizeX/34)
         for i,id in ipairs(cat) do
-            --print(i,"wörk")
             local icon = graphics:NewFrame(offset+34*((i-1)%xMax)+18,LD.Settings.ToolHolder.Y+76+34*math.floor((i-1)/xMax),32,32,2,"Menu")
             icon:SetImage(Textures.TileTextures[id])
             icon:SetColours(.3,.3,.3,1,true)
