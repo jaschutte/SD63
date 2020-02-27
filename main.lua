@@ -18,6 +18,8 @@ _G.Textures = {
         Cursors = {};
     };
 }
+_G.ClickAfterEvents = {}
+_G.ClickBeforeEvents = {}
 _G.GetId = function()
     __ID = __ID + 1
     return __ID
@@ -122,6 +124,11 @@ function love.load()
         end
         Textures.RawTextures.Cursors[texture:sub(1,-5)] = love.mouse.newCursor(love.image.newImageData(dir.."/"..texture),x,y)
     end
+    --themes
+    local dir = "textures/themes/tiles"
+    for _,texture in pairs(love.filesystem.getDirectoryItems(dir)) do
+        Textures.MenuTextures["THEME/TILES/"..texture:sub(1,-5)] = love.graphics.newImage(dir.."/"..texture)
+    end
     --setup default Level
     for x = 1,50 do
         LD.Level.Tiles[x] = {}
@@ -148,6 +155,10 @@ function love.mousereleased(mx,my,b)
 end
 
 function love.mousepressed(mx,my,b)
+    --afterclick
+    for _,event in pairs(ClickBeforeEvents) do
+        event(mx,my,b)
+    end
     --update toolsettings
     ToolSettings.MouseDown = true
     tools:MouseDown(b)
@@ -156,8 +167,7 @@ function love.mousepressed(mx,my,b)
         local frame = graphics.FramesOnZ[i]
         if frame then
             if frame.Visible and frame.Collision.OnClick then
-                local x,y, w,h = frame:ToScreenPixels()
-                if mx > x and mx < x+w and my > y and my < y+h then
+                if frame:CheckCollision(mx,my) then
                     frame.Collision.OnClick(mx,my,b)
                     break
                 end
@@ -165,6 +175,10 @@ function love.mousepressed(mx,my,b)
         else
             print("Warning: Id "..i.." is nil!")
         end
+    end
+    --afterclick
+    for _,event in pairs(ClickAfterEvents) do
+        event(mx,my,b)
     end
 end
 
@@ -196,8 +210,7 @@ function love.mousemoved(mx,my)
         local frame = graphics.FramesOnZ[i]
         if frame then
             if frame.Visible and frame.Collision.DetectHover then
-                local x,y, w,h = frame:ToScreenPixels()
-                if mx > x and mx < x+w and my > y and my < y+h then
+                if frame:CheckCollision(mx,my) then
                     frame.Collision.IsBeingHovered = true
                     if not oldFrames[frame.Id] then
                         frame.Collision.OnEnter(frame,mx,my)

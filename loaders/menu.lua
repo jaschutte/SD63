@@ -7,6 +7,8 @@ mod.Icons = {}
 mod.TileTools = {}
 mod.ItemTools = {}
 mod.HUD = {}
+mod.TileButton = nil
+mod.ItemButton = nil
 
 local function sign(x,f)
     return x == 0 and (f or 0) or x < 0 and -1 or 1
@@ -198,6 +200,50 @@ function mod:GenerateTools(tileTools)
             graphics:MassDelete(mod.HUD)
         end
         mod.TileTools.Fill.Visible = true
+        mod.TileTools.ChangeCatagory = graphics:NewFrame(LD.Settings.ToolHolder.X+LD.Settings.ToolHolder.SizeX/2,2,144,54,2,"Menu")
+        mod.TileTools.ChangeCatagory.ApplyZoom = false
+        mod.TileTools.ChangeCatagory.ScreenPosition = true
+        mod.TileTools.ChangeCatagory.AnchorY = 0
+        mod.TileTools.ChangeCatagory:SetImage(Textures.MenuTextures["THEME/TILES/"..ToolSettings.TileCatagory])
+        mod.TileTools.ChangeCatagory.Collision.DetectHover = true
+        mod.TileTools.ChangeCatagory.Collision.OnClick = function()
+            local frames = {}
+            local mainFrame = graphics:NewFrame(WindowX/2,WindowY/2,298,118,999,"Menu")
+            mainFrame.ApplyZoom = false
+            mainFrame.ScreenPosition = true
+            mainFrame:SetColours(.15,.15,.15)
+            mainFrame.Visible = true
+            mainFrame.Collision.DetectHover = true
+            mainFrame.Collision.OnEnter = function() end
+            mainFrame.Collision.OnLeave = function() end
+            frames[#frames+1] = mainFrame
+            for cat = 100,650,50 do
+                local button = graphics:NewFrame(mainFrame.X-111+(cat/50-2)%4*74,WindowY/2-42.5+math.floor((cat/50-2)/4)*29,72,27,1000,"Menu")
+                button.ApplyZoom = false
+                button.ScreenPosition = true
+                button.AnchorX = 0.5
+                button.AnchorY = 0.5
+                button.FitImageInsideWH = true
+                button:SetImage(Textures.MenuTextures["THEME/TILES/"..cat])
+                button.Collision.DetectHover = true
+                button.Collision.OnClick = function()
+                    ToolSettings.TileCatagory = cat
+                    mod:GenerateIcons(true)
+                    mod:GenerateTools(true)
+                    graphics:MassDelete(frames)
+                    ClickBeforeEvents.ThemeAfterPress = nil
+                end
+                button.Visible = true
+                frames[#frames+1] = button
+            end
+            ClickBeforeEvents.ThemeAfterPress = function(mx,my,b)
+                if not mainFrame:CheckCollision(mx,my) then
+                    graphics:MassDelete(frames)
+                    ClickBeforeEvents.ThemeAfterPress = nil
+                end
+            end
+        end
+        mod.TileTools.ChangeCatagory.Visible = true
     else
 
     end
@@ -395,6 +441,8 @@ function mod:InitMenu()
             mod:GenerateTools(ToolSettings.CurrentDisplay == "Tiles")
         end
     end
+    mod.TileButton = tilesButton
+    mod.ItemButton = itemsButton
 end
 
 return mod

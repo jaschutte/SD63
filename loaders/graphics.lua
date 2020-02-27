@@ -179,6 +179,10 @@ function mod:NewFrame(x,y,w,h,z,layer)
         end
         return obj
     end
+    function obj:CheckCollision(mx,my)
+        local x,y, w,h = obj:ToScreenPixels()
+        return mx > x and mx < x+w and my > y and my < y+h
+    end
     function obj:SetImage(img)
         obj.ImageData.Image = img
         obj.ImageData.W, obj.ImageData.H = img:getDimensions()
