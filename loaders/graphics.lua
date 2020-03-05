@@ -289,9 +289,13 @@ function mod:ScreenToTile(x,y) --convert screen units to tile units
     return floor((x-CameraPosition.X)/CameraPosition.Z/32), floor((y-CameraPosition.Y)/CameraPosition.Z/32)
 end
 
-function mod:IsTilePositionValid(x,y,id) --check if position is valid. If true it returns the tile id
+function mod:IsTilePositionValid(x,y,id,rev) --check if position is valid. If true it returns the tile id
     if id then
-        return LD.Level.Tiles[x] and LD.Level.Tiles[x][y]  and LD.Level.Tiles[x][y] == id and id or false
+        if rev then
+            return LD.Level.Tiles[x] and LD.Level.Tiles[x][y]  and LD.Level.Tiles[x][y] ~= id and LD.Level.Tiles[x][y] or false
+        else
+            return LD.Level.Tiles[x] and LD.Level.Tiles[x][y]  and LD.Level.Tiles[x][y] == id and id or false
+        end
     else
         return LD.Level.Tiles[x] and LD.Level.Tiles[x][y] or false
     end

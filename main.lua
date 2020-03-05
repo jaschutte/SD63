@@ -107,10 +107,16 @@ function love.load()
         Catagories.TileCatagories[tonumber(folder)] = {}
         for _,texture in ipairs(love.filesystem.getDirectoryItems(subDir)) do
             local group = tonumber(folder)
-            local num = tonumber(texture:sub(1,-5))
-            local id = string.char(math.floor((group+num)/75)+49)..string.char((group+num)-math.floor((group+num)/75)*75+49)
-            Textures.TileTextures[id] = love.graphics.newImage(subDir.."/"..texture)
-            Catagories.TileCatagories[group][tonumber(texture:sub(1,-5))] = id
+            if string.sub(texture,1,1) == "m" then
+                local id = tonumber(texture:sub(2,-5))
+                Textures.TileTextures[texture:sub(1,-5)] = love.graphics.newImage(subDir.."/"..texture)
+                Catagories.TileCatagories[group][id] = texture:sub(1,-5)
+            else
+                local num = tonumber(texture:sub(1,-5))
+                local id = string.char(math.floor((group+num)/75)+49)..string.char((group+num)-math.floor((group+num)/75)*75+49)
+                Textures.TileTextures[id] = love.graphics.newImage(subDir.."/"..texture)
+                Catagories.TileCatagories[group][num] = id
+            end
         end
     end
     --cursor icons

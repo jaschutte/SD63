@@ -1,4 +1,5 @@
 
+local multiTileStats = require("loaders.stats.multiTiles")
 local graphics = require("loaders.graphics")
 local menu = require("loaders.menu")
 local mod = {}
@@ -18,7 +19,14 @@ end
 
 function _G:SetTile(x,y,id) --checks if id, x and y is valid & applies a multitile if needed
     if graphics:IsTilePositionValid(x,y) and Textures.TileTextures[id] then
-        mod:SetTileFinal(x,y,id)
+        if string.sub(id,1,1) == "m" then
+            local l, r = graphics:IsTilePositionValid(x-1,y,"0",true), graphics:IsTilePositionValid(x+1,y,"0",true)
+            local t, b = graphics:IsTilePositionValid(x,y-1,"0",true), graphics:IsTilePositionValid(x,y+1,"0",true)
+            print(l,r,t,b)
+            mod:SetTileFinal(x,y,id)
+        else
+            mod:SetTileFinal(x,y,id)
+        end
     end
 end
 
