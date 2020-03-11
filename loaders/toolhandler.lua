@@ -1,5 +1,6 @@
 
 local multiTileStats = require("loaders.stats.multiTiles")
+multiTileStats:Init()
 local graphics = require("loaders.graphics")
 local menu = require("loaders.menu")
 local mod = {}
@@ -20,10 +21,73 @@ end
 function _G:SetTile(x,y,id) --checks if id, x and y is valid & applies a multitile if needed
     if graphics:IsTilePositionValid(x,y) and Textures.TileTextures[id] then
         if string.sub(id,1,1) == "m" then
+            local TLS = multiTileStats.MultiTiles[ToolSettings.TileCatagory][tonumber(string.sub(id,2))]
+            local DB = multiTileStats.Override
             local l, r = graphics:IsTilePositionValid(x-1,y,"0",true), graphics:IsTilePositionValid(x+1,y,"0",true)
             local t, b = graphics:IsTilePositionValid(x,y-1,"0",true), graphics:IsTilePositionValid(x,y+1,"0",true)
-            print(l,r,t,b)
-            mod:SetTileFinal(x,y,id)
+            local c = graphics:IsTilePositionValid(x,y)
+            local sId = TLS.TopTile
+            local notPlace = false
+            if t and not b then
+
+            elseif b and not t then
+                if l and r then
+                    if DB[c] == "SlabTileTop" then
+                        notPlace = true
+                    elseif DB[r] == "TopTile" and DB[l] == "SlabTileTop" then
+                        if DB[c] ~= "TopToSlabLeft" and  DB[c] ~= "TopToSlabLeftRandom" then
+                            sId = math.random(1,2) == 1 and TLS.TopToSlab.Left or TLS.TopToSlab.LeftRandom
+                        else
+                            notPlace = true
+                        end
+                    elseif DB[l] == "TopTile" and DB[r] == "SlabTileTop" then
+                        if DB[c] ~= "TopToSlabRight" and  DB[c] ~= "TopToSlabRightRandom" then
+                            sId = math.random(1,2) == 1 and TLS.TopToSlab.Right or TLS.TopToSlab.RightRandom
+                        else
+                            notPlace = true
+                        end
+                    end
+                elseif l then
+                    if not r then
+                        if DB[c] ~= "CornersSlabTopRightBase" and DB[c] ~= "CornersSlabTopRightRandom" and DB[c] ~= "CornersTopRightBase" and DB[c] ~= "CornersTopRightRandom" then
+                            if DB[l] == "SlabTileTop" then
+                                sId = math.random(2) == 1 and TLS.Corners.SlabTopRightBase or TLS.Corners.SlabTopRightRandom
+                            else
+                                sId = math.random(2) == 1 and TLS.Corners.TopRightBase or TLS.Corners.TopRightRandom
+                            end
+                        else
+                            notPlace = true
+                        end
+                    end
+                elseif r then
+                    if not l then
+                        if DB[c] ~= "CornersSlabTopLeftBase" and DB[c] ~= "CornersSlabTopLeftRandom" and DB[c] ~= "CornersTopLeftBase" and DB[c] ~= "CornersTopLeftRandom" then
+                            if DB[r] == "SlabTileTop" then
+                                sId = math.random(2) == 1 and TLS.Corners.SlabTopLeftBase or TLS.Corners.SlabTopLeftRandom
+                            else
+                                sId = math.random(2) == 1 and TLS.Corners.TopLeftBase or TLS.Corners.TopLeftRandom
+                            end
+                        else
+                            notPlace = true
+                        end
+                    end
+                end
+            elseif t and b then
+                if l and not r then
+                    sId = TLS.RightEdge
+                elseif r and not l then
+                    sId = TLS.LeftEdge
+                elseif l and r then
+                    if DB[t] == "SlabTileTop" then
+                        sId = TLS.GroundTiles.Base
+                    else
+                        sId = TLS.SlabTileBottem
+                    end
+                end
+            end
+            if not notPlace then
+                mod:SetTileFinal(x,y,sId)
+            end
         else
             mod:SetTileFinal(x,y,id)
         end

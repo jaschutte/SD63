@@ -9,22 +9,22 @@
 
 local mod = {}
 
-function mod.DeepLoop(t,f)
+function mod.DeepLoop(t,f,extra,igFirst)
     for key,value in pairs(t) do
         if type(value) == "table" then
-            mod.DeepLoop(value,f)
+            mod.DeepLoop(value,f,igFirst and "" or extra..key)
         else
-            f(t,key,value)
+            f(t,key,value,extra)
         end
     end
 end
 
 function mod:Init()
     for group,tiles in pairs(mod.MultiTiles) do
-        mod.DeepLoop(tiles,function(og,key,val)
+        mod.DeepLoop(tiles,function(og,key,val,extrakey)
             og[key] = string.char(math.floor((group+val)/75)+49)..string.char((group+val)-math.floor((group+val)/75)*75+49)
-            mod.Override[og[key]] = true
-        end)
+            mod.Override[og[key]] = extrakey..key
+        end,"",true)
     end
 end
 
@@ -38,6 +38,12 @@ mod.MultiTiles = {
             SlabTileBottem = 3;
             LeftEdge = 15;
             RightEdge = 16;
+            TopToSlab = {
+                Left = 23;
+                Right = 24;
+                LeftRandom = 25;
+                RightRandom = 26;
+            };
             GroundTiles = {
                 Base = 3;
                 Random1 = 5;
