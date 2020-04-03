@@ -274,6 +274,10 @@ function mod:GenerateIcons(tileIcons)
                 H = LD.Settings.ToolHolder.SizeY-190;
             }
             icon.Collision.OnClick = function()
+                if ToolSettings.TileTool == "fill" then
+                    love.mouse.setCursor(Textures.RawTextures.Cursors.bucket)
+                end
+                ToolSettings.EraserMode = false
                 ToolSettings.SelectedTile = id
             end
             icon.Visible = true

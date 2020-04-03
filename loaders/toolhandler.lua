@@ -29,44 +29,69 @@ function _G:SetTile(x,y,id) --checks if id, x and y is valid & applies a multiti
             local sId = TLS.TopTile
             local notPlace = false
             if t and not b then
-
+                if l and not r then
+                    if DB[t]["SmoothCornersBottemLeftBig"] then
+                        sId = TLS.SmoothCorners.BottemLeft.Small
+                    else
+                        sId = TLS.Corners.BottemLeftBase
+                    end
+                elseif r and not l then
+                    if DB[t]["SmoothCornersBottemRightBig"] then
+                        sId = TLS.SmoothCorners.BottemRight.Small
+                    else
+                        sId = TLS.Corners.BottemRightBase
+                    end
+                else
+                    sId = TLS.BottemTile
+                end
             elseif b and not t then
                 if l and r then
-                    if DB[c] == "SlabTileTop" then
+                    if (DB[r]["SmoothCornersTopLeftBaseTR"] or DB[r]["SmoothCornersTopLeftRandomTR"]) and (DB[l]["SmoothCornersTopRightBaseTL"] or DB[l]["SmoothCornersTopRightRandomTL"]) then
+                        sId = TLS.SlabTileTop
+                    elseif DB[r]["SmoothCornersTopLeftBaseTR"] or DB[r]["SmoothCornersTopLeftRandomTR"] then
+                        sId = TLS.SmoothCorners.TopLeft.Base.TL
+                    elseif DB[l]["SmoothCornersTopRightBaseTL"] or DB[l]["SmoothCornersTopRightRandomTL"] then
+                        sId = TLS.SmoothCorners.TopRight.Base.TR
+                    elseif DB[c]["SlabTileTop"] then
                         notPlace = true
-                    elseif DB[r] == "TopTile" and DB[l] == "SlabTileTop" then
-                        if DB[c] ~= "TopToSlabLeft" and  DB[c] ~= "TopToSlabLeftRandom" then
-                            sId = math.random(1,2) == 1 and TLS.TopToSlab.Left or TLS.TopToSlab.LeftRandom
-                        else
-                            notPlace = true
-                        end
-                    elseif DB[l] == "TopTile" and DB[r] == "SlabTileTop" then
-                        if DB[c] ~= "TopToSlabRight" and  DB[c] ~= "TopToSlabRightRandom" then
-                            sId = math.random(1,2) == 1 and TLS.TopToSlab.Right or TLS.TopToSlab.RightRandom
-                        else
-                            notPlace = true
-                        end
+                    elseif true then --ADD TopToSlab functionality
+                    elseif DB[l]["SlabTileTop"] and DB[r]["SlabTileTop"] then
+                        sId = TLS.SlabTileTop
                     end
                 elseif l then
                     if not r then
-                        if DB[c] ~= "CornersSlabTopRightBase" and DB[c] ~= "CornersSlabTopRightRandom" and DB[c] ~= "CornersTopRightBase" and DB[c] ~= "CornersTopRightRandom" then
-                            if DB[l] == "SlabTileTop" then
+                        local rb = graphics:IsTilePositionValid(x+1,y+1,"0",true)
+                        local ll = graphics:IsTilePositionValid(x-2,y,"0",true)
+                        local lt = graphics:IsTilePositionValid(x-1,y-1,"0")
+                        if rb and ll and not DB[rb]["SlabTileTop"] and not DB[ll]["SlabTopTile"] and lt then
+                            sId = TLS.SmoothCorners.TopLeft.Base.TR
+                        elseif DB[l]["SlabTileTop"] then
+                            if not DB[c]["CornersSlabTopRightBase"] and not DB[c]["CornersSlabTopRightRandom"] then
                                 sId = math.random(2) == 1 and TLS.Corners.SlabTopRightBase or TLS.Corners.SlabTopRightRandom
                             else
-                                sId = math.random(2) == 1 and TLS.Corners.TopRightBase or TLS.Corners.TopRightRandom
+                                notPlace = true
                             end
+                        elseif not DB[c]["CornersTopRightBase"] and not DB[c]["CornersTopRightRandom"] then
+                            sId = math.random(2) == 1 and TLS.Corners.TopRightBase or TLS.Corners.TopRightRandom
                         else
                             notPlace = true
                         end
                     end
                 elseif r then
                     if not l then
-                        if DB[c] ~= "CornersSlabTopLeftBase" and DB[c] ~= "CornersSlabTopLeftRandom" and DB[c] ~= "CornersTopLeftBase" and DB[c] ~= "CornersTopLeftRandom" then
-                            if DB[r] == "SlabTileTop" then
+                        local lb = graphics:IsTilePositionValid(x-1,y+1,"0",true)
+                        local rr = graphics:IsTilePositionValid(x+2,y,"0",true)
+                        local rt = graphics:IsTilePositionValid(x+1,y-1,"0")
+                        if lb and rr and not DB[lb]["SlabTileTop"] and not DB[rr]["SlabTopTile"] and rt then
+                            sId = TLS.SmoothCorners.TopRight.Base.TL
+                        elseif DB[r]["SlabTileTop"] then
+                            if not DB[c]["CornersSlabTopLeftBase"] and not DB[c]["CornersSlabTopLeftRandom"] then
                                 sId = math.random(2) == 1 and TLS.Corners.SlabTopLeftBase or TLS.Corners.SlabTopLeftRandom
                             else
-                                sId = math.random(2) == 1 and TLS.Corners.TopLeftBase or TLS.Corners.TopLeftRandom
+                                notPlace = true
                             end
+                        elseif not DB[c]["CornersTopLeftBase"] and not DB[c]["CornersTopLeftRandom"] then
+                            sId = math.random(2) == 1 and TLS.Corners.TopLeftBase or TLS.Corners.TopLeftRandom
                         else
                             notPlace = true
                         end
@@ -77,16 +102,95 @@ function _G:SetTile(x,y,id) --checks if id, x and y is valid & applies a multiti
                     sId = TLS.RightEdge
                 elseif r and not l then
                     sId = TLS.LeftEdge
-                elseif l and r then
-                    if DB[t] == "SlabTileTop" then
-                        sId = TLS.GroundTiles.Base
+                else
+                    local lb = graphics:IsTilePositionValid(x-1,y+1,"0",true)
+                    local rb = graphics:IsTilePositionValid(x+1,y+1,"0",true)
+                    if lb and not rb then
+                        local rr = graphics:IsTilePositionValid(x+2,y,"0",true)
+                        if not rr then
+                            sId = TLS.SmoothCorners.BottemLeft.Big;
+                        else
+                            sId = TLS.EdgeCorner.BottemLeft
+                        end
+                    elseif rb and not lb then
+                        local ll = graphics:IsTilePositionValid(x-2,y,"0",true)
+                        if not ll then
+                            sId = TLS.SmoothCorners.BottemRight.Big;
+                        else
+                            sId = TLS.EdgeCorner.BottemRight
+                        end
                     else
-                        sId = TLS.SlabTileBottem
+                        if DB[t]["SmoothCornersTopRightBaseTL"] or DB[t]["SmoothCornersTopRightRandomTL"] then
+                            sId = DB[t]["SmoothCornersTopRightBaseTL"] and TLS.SmoothCorners.TopRight.Base.BL or TLS.SmoothCorners.TopRight.Random.BL
+                        elseif DB[t]["SmoothCornersTopLeftBaseTR"] or DB[t]["SmoothCornersTopLeftRandomTR"] then
+                            sId = DB[t]["SmoothCornersTopLeftBaseTR"] and TLS.SmoothCorners.TopLeft.Base.BR or TLS.SmoothCorners.TopLeft.Random.BR
+                        else
+                            local lt = graphics:IsTilePositionValid(x-1,y-1,"0",true)
+                            local rt = graphics:IsTilePositionValid(x+1,y-1,"0",true)
+                            if lt and not rt then
+                                if DB[r]["SlabTileTop"] or DB[r]["SmoothCornersTopRightBaseTR"] or DB[r]["SmoothCornersTopRightRandomTR"] then
+                                    sId = TLS.EdgeCorner.SlabLeftTop
+                                else
+                                    sId = TLS.EdgeCorner.Left
+                                end
+                            elseif rt and not lt then
+                                if DB[l]["SlabTileTop"] or DB[l]["SmoothCornersTopLeftBaseTL"] or DB[l]["SmoothCornersTopLeftRandomTL"] then
+                                    sId = TLS.EdgeCorner.SlabRightTop
+                                else
+                                    sId = TLS.EdgeCorner.Right
+                                end
+                            else
+                                if DB[t]["SlabTileTop"] then
+                                    sId = TLS.SlabTileBottem
+                                elseif DB[t]["SmoothCornersTopRightBaseTR"] or DB[t]["SmoothCornersTopRightRandomTR"] then
+                                    sId = TLS.SmoothCorners.TopRight.Base.BR
+                                elseif DB[t]["SmoothCornersTopLeftBaseTL"] or DB[t]["SmoothCornersTopLeftRandomTL"] then
+                                    sId = TLS.SmoothCorners.TopLeft.Base.BL
+                                elseif DB[t]["EdgeCornerSlabRightTop"] then
+                                    sId = TLS.EdgeCorner.SlabRightBottem
+                                elseif DB[t]["EdgeCornerSlabLeftTop"] then
+                                    sId = TLS.EdgeCorner.SlabLeftBottem
+                                elseif not DB[c]["GroundTilesBase"] and not DB[c]["GroundTilesRandom1"] and not DB[c]["GroundTilesRandom2"] then
+                                    sId = math.random(1,8) ~= 1 and TLS.GroundTiles.Base or math.random(1,2) == 1 and TLS.GroundTiles.Random1 or TLS.GroundTiles.Random2
+                                else
+                                    notPlace = true
+                                end
+                            end
+                        end
                     end
                 end
             end
             if not notPlace then
+                if sId == TLS.TopTile then
+                    if DB[c] and (DB[c]["SlabTileTop"] or DB[c]["TopTile"]) then
+                        sId = c
+                    else
+                        if l and r then
+                            if DB[l]["SlabTileTop"] or DB[r]["SlabTileTop"] then
+                                if math.random(1,3) == 1 then
+                                    sId = TLS.SlabTileTop
+                                end
+                            end
+                        elseif math.random(1,7) == 1 then
+                            sId = TLS.SlabTileTop
+                        end
+                    end
+                end
                 mod:SetTileFinal(x,y,sId)
+                if c ~= sId then
+                    if r and DB[r] then
+                        _G:SetTile(x+1,y,id)
+                    end
+                    if l and DB[l] then
+                        _G:SetTile(x-1,y,id)
+                    end
+                    if t and DB[t] then
+                        _G:SetTile(x,y-1,id)
+                    end
+                    if b and DB[b] then
+                        _G:SetTile(x,y+1,id)
+                    end
+                end
             end
         else
             mod:SetTileFinal(x,y,id)

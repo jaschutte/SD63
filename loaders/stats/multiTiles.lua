@@ -1,12 +1,4 @@
 
---[[
-    01 02 03 04 05
-    06 07 08 09 10
-    11 12 xx 13 14
-    15 16 17 18 19
-    20 21 22 23 24
-]]
-
 local mod = {}
 
 function mod.DeepLoop(t,f,extra,igFirst)
@@ -20,12 +12,22 @@ function mod.DeepLoop(t,f,extra,igFirst)
 end
 
 function mod:Init()
+    local real = {}
     for group,tiles in pairs(mod.MultiTiles) do
         mod.DeepLoop(tiles,function(og,key,val,extrakey)
             og[key] = string.char(math.floor((group+val)/75)+49)..string.char((group+val)-math.floor((group+val)/75)*75+49)
-            mod.Override[og[key]] = extrakey..key
+            if real[og[key]] then
+                real[og[key]][extrakey..key] = true
+            else
+                real[og[key]] = {[extrakey..key] = true}
+            end
         end,"",true)
     end
+    mod.Override = setmetatable({},{
+        __index = function(_,key)
+            return real[key] and real[key] or {}
+        end
+    })
 end
 
 mod.Override = {}
@@ -35,15 +37,9 @@ mod.MultiTiles = {
             TopTile = 1;
             BottemTile = 37;
             SlabTileTop = 2;
-            SlabTileBottem = 3;
+            SlabTileBottem = 4;
             LeftEdge = 15;
             RightEdge = 16;
-            TopToSlab = {
-                Left = 23;
-                Right = 24;
-                LeftRandom = 25;
-                RightRandom = 26;
-            };
             GroundTiles = {
                 Base = 3;
                 Random1 = 5;
@@ -58,44 +54,56 @@ mod.MultiTiles = {
                 SlabTopLeftRandom = 13;
                 SlabTopRightBase = 12;
                 SlabTopRightRandom = 14;
-                BottemLeftBase = 45;
-                BottemLeftRandom = 45;
-                BottemRightBase = 44;
-                BottemRightRandom = 44;
+                BottemRightBase = 45;
+                BottemLeftBase = 44;
             };
             SmoothCorners = {
-                TopLeft = {
-                    TL = 27;
-                    TR = 25;
-                    BL = 29;
-                    BR = 35;
-                };
                 TopRight = {
-                    TL = 26;
-                    TR = 36;
-                    BL = 28;
-                    BR = 30;
+                    Base = {
+                        TL = 31;
+                        TR = 25;
+                        BL = 33;
+                        BR = 35;
+                    };
+                    Random = {
+                        TL = 27;
+                        TR = 23;
+                        BL = 29;
+                        BR = 35;
+                    }
+                };
+                TopLeft = {
+                    Base = {
+                        TL = 26;
+                        TR = 32;
+                        BL = 36;
+                        BR = 34;
+                    };
+                    Random = {
+                        TL = 24;
+                        TR = 28;
+                        BL = 36;
+                        BR = 30;
+                    }
                 };
                 BottemLeft = {
-                    TL = 39;
-                    TR = 41;
-                    BL = 0;
-                    BR = 39;
+                    Small = 38;
+                    Big = 40;
                 };
                 BottemRight = {
-                    TL = 40;
-                    TR = 38;
-                    BL = 38;
-                    BR = 0;
+                    Small = 39;
+                    Big = 41;
                 };
             };
             EdgeCorner = {
-                Left = 17;
-                Right = 18;
-                SlabLeftTop = 19;
-                SlabRightTop = 20;
-                SlabLeftBottem = 21;
-                SlabRightBottem = 22;
+                Left = 18;
+                Right = 17;
+                SlabLeftTop = 20;
+                SlabRightTop = 19;
+                SlabLeftBottem = 22;
+                SlabRightBottem = 21;
+                BottemLeft = 42;
+                BottemRight = 43;
             }
         };
     }
