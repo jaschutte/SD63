@@ -95,35 +95,34 @@ end
 function mod:GenerateTools(tileTools)
     graphics:MassDelete(mod.TileTools)
     graphics:MassDelete(mod.ItemTools)
+    mod.TileTools.MoveUp = graphics:NewFrame(
+        LD.Settings.ToolHolder.X+18,LD.Settings.ToolHolder.Y+LD.Settings.ToolHolder.SizeY-114,
+        16,16,
+        2,"Menu"
+    )
+    mod.TileTools.MoveUp:SetImage(Textures.MenuTextures.moveUp)
+    mod.TileTools.MoveUp.ApplyZoom = false
+    mod.TileTools.MoveUp.ScreenPosition = true
+    mod.TileTools.MoveUp.Collision.DetectHover = true
+    mod.TileTools.MoveUp.Collision.OnClick = function()
+        mod:MoveIcons(0,-64)
+    end
+    mod.TileTools.MoveUp.Visible = true
+    mod.TileTools.MoveDown = graphics:NewFrame(
+        LD.Settings.ToolHolder.X+18,LD.Settings.ToolHolder.Y+LD.Settings.ToolHolder.SizeY-98,
+        16,16,
+        2,"Menu"
+    )
+    mod.TileTools.MoveDown:SetImage(Textures.MenuTextures.moveDown)
+    mod.TileTools.MoveDown.ApplyZoom = false
+    mod.TileTools.MoveDown.ScreenPosition = true
+    mod.TileTools.MoveDown.Collision.DetectHover = true
+    mod.TileTools.MoveDown.Collision.OnClick = function()
+        mod:MoveIcons(0,64)
+    end
+    mod.TileTools.MoveDown.Visible = true
     if tileTools then
         mod.TileTools = {}
-        --general
-        mod.TileTools.MoveUp = graphics:NewFrame(
-            LD.Settings.ToolHolder.X+18,LD.Settings.ToolHolder.Y+LD.Settings.ToolHolder.SizeY-114,
-            16,16,
-            2,"Menu"
-        )
-        mod.TileTools.MoveUp:SetImage(Textures.MenuTextures.moveUp)
-        mod.TileTools.MoveUp.ApplyZoom = false
-        mod.TileTools.MoveUp.ScreenPosition = true
-        mod.TileTools.MoveUp.Collision.DetectHover = true
-        mod.TileTools.MoveUp.Collision.OnClick = function()
-            mod:MoveIcons(0,-64)
-        end
-        mod.TileTools.MoveUp.Visible = true
-        mod.TileTools.MoveDown = graphics:NewFrame(
-            LD.Settings.ToolHolder.X+18,LD.Settings.ToolHolder.Y+LD.Settings.ToolHolder.SizeY-98,
-            16,16,
-            2,"Menu"
-        )
-        mod.TileTools.MoveDown:SetImage(Textures.MenuTextures.moveDown)
-        mod.TileTools.MoveDown.ApplyZoom = false
-        mod.TileTools.MoveDown.ScreenPosition = true
-        mod.TileTools.MoveDown.Collision.DetectHover = true
-        mod.TileTools.MoveDown.Collision.OnClick = function()
-            mod:MoveIcons(0,64)
-        end
-        mod.TileTools.MoveDown.Visible = true
         --tile only
         mod.TileTools.Pencil = graphics:NewFrame(
             LD.Settings.ToolHolder.X+44,LD.Settings.ToolHolder.Y+LD.Settings.ToolHolder.SizeY-106,
@@ -245,7 +244,32 @@ function mod:GenerateTools(tileTools)
         end
         mod.TileTools.ChangeCatagory.Visible = true
     else
-
+        mod.ItemTools.Main = graphics:NewFrame(
+            LD.Settings.ToolHolder.X+44,LD.Settings.ToolHolder.Y+LD.Settings.ToolHolder.SizeY-106,
+            32,32,
+            2,"Menu"
+        )
+        mod.ItemTools.Main:SetImage(Textures.MenuTextures.itemPlace)
+        mod.ItemTools.Main.ApplyZoom = false
+        mod.ItemTools.Main.ScreenPosition = true
+        mod.ItemTools.Main.Collision.DetectHover = true
+        mod.ItemTools.Main.Collision.OnClick = function()
+            
+        end
+        mod.ItemTools.Main.Visible = true
+        mod.ItemTools.Eraser = graphics:NewFrame(
+            LD.Settings.ToolHolder.X+78,LD.Settings.ToolHolder.Y+LD.Settings.ToolHolder.SizeY-106,
+            32,32,
+            2,"Menu"
+        )
+        mod.ItemTools.Eraser:SetImage(Textures.MenuTextures.toolEraser)
+        mod.ItemTools.Eraser.ApplyZoom = false
+        mod.ItemTools.Eraser.ScreenPosition = true
+        mod.ItemTools.Eraser.Collision.DetectHover = true
+        mod.ItemTools.Eraser.Collision.OnClick = function()
+            
+        end
+        mod.ItemTools.Eraser.Visible = true
     end
 end
 
@@ -395,22 +419,72 @@ function mod:InitMenu()
         end
     end
     --functionality/icons
+    local function removeTiles()
+        graphics:MassDelete(mod.Icons)
+        graphics:MassDelete(mod.TileTools)
+        graphics:MassDelete(mod.HUD)
+        love.mouse.setCursor()
+        toolHolder.Visible = false
+        iconHolder.Visible = false
+        graphics.DrawHoverTile = false
+        graphics.DrawTileRangeBackground = false
+        graphics.DrawTileSelection = false
+        ToolSettings.TileRange.Stage = 1
+        ToolSettings.CurrentDisplay = false
+    end
+
+    local function removeItems()
+        graphics:MassDelete(mod.Icons)
+        graphics:MassDelete(mod.TileTools)
+        graphics:MassDelete(mod.ItemTools)
+        love.mouse.setCursor()
+        toolHolder.Visible = false
+        iconHolder.Visible = false
+        ToolSettings.CurrentDisplay = false
+    end
+
+    itemsButton.Collision.OnClick = function()
+        if ToolSettings.CurrentDisplay then
+            if ToolSettings.CurrentDisplay == "Items" then
+                removeItems()
+            else
+                removeTiles()
+                mod:GenerateIcons(false)
+                mod:GenerateTools(false)
+                toolHolder.Visible = true
+                iconHolder.Visible = true
+                ToolSettings.CurrentDisplay = "Items"
+            end
+        else
+            mod:GenerateIcons(false)
+            mod:GenerateTools(false)
+            toolHolder.Visible = true
+            iconHolder.Visible = true
+            ToolSettings.CurrentDisplay = "Items"
+        end
+    end
+
     tilesButton.Collision.OnClick = function()
         if ToolSettings.CurrentDisplay then
             if ToolSettings.CurrentDisplay == "Tiles" then
-                graphics:MassDelete(mod.Icons)
-                graphics:MassDelete(mod.TileTools)
-                graphics:MassDelete(mod.HUD)
-                love.mouse.setCursor()
-                toolHolder.Visible = false
-                iconHolder.Visible = false
-                graphics.DrawHoverTile = false
-                graphics.DrawTileRangeBackground = false
-                graphics.DrawTileSelection = false
-                ToolSettings.TileRange.Stage = 1
-                ToolSettings.CurrentDisplay = false
+                removeTiles()
             else
-
+                removeItems()
+                mod:GenerateIcons(true)
+                mod:GenerateTools(true)
+                toolHolder.Visible = true
+                iconHolder.Visible = true
+                if ToolSettings.SelectedTile == "0" or not Textures.TileTextures[ToolSettings.SelectedTile] then
+                    ToolSettings.SelectedTile = "2K"
+                end
+                if ToolSettings.TileTool == "normal" then
+                    mod.TileTools.Pencil.Collision.OnClick()
+                elseif ToolSettings.TileTool == "area" then
+                    mod.TileTools.Area.Collision.OnClick()
+                elseif ToolSettings.TileTool == "fill" then
+                    mod.TileTools.Fill.Collision.OnClick()
+                end
+                ToolSettings.CurrentDisplay = "Tiles"
             end
         else
             mod:GenerateIcons(true)

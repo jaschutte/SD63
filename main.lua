@@ -27,6 +27,15 @@ end
 _G.Lerp = function(x,y,t)
     return (1-t)*x + t*y
 end
+_G.PrintTable = function(...)
+    for _,t in pairs({...}) do
+        local s = ""
+        for k,v in pairs(t) do s = s..tostring(k)..": "..tostring(v).."\t" end
+        if s ~= "" then
+            print(s)
+        end
+    end
+end
 _G.ToolSettings = {
     CurrentDisplay = false;
     UIBlockingMouse = false;

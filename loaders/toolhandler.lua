@@ -54,7 +54,11 @@ function _G:SetTile(x,y,id) --checks if id, x and y is valid & applies a multiti
                         sId = TLS.SmoothCorners.TopRight.Base.TR
                     elseif DB[c]["SlabTileTop"] then
                         notPlace = true
-                    elseif true then --ADD TopToSlab functionality
+                    elseif DB[c]["TopTile"] and DB[r]["SlabTileTop"] then
+                        sId = TLS.SmoothCorners.TopLeft.Random.TL
+                    elseif DB[c]["TopTile"] and DB[l]["SlabTileTop"] then --ADD TopToSlab functionality
+                        sId = TLS.SmoothCorners.TopRight.Random.TR
+
                     elseif DB[l]["SlabTileTop"] and DB[r]["SlabTileTop"] then
                         sId = TLS.SlabTileTop
                     end
@@ -161,21 +165,6 @@ function _G:SetTile(x,y,id) --checks if id, x and y is valid & applies a multiti
                 end
             end
             if not notPlace then
-                if sId == TLS.TopTile then
-                    if DB[c] and (DB[c]["SlabTileTop"] or DB[c]["TopTile"]) then
-                        sId = c
-                    else
-                        if l and r then
-                            if DB[l]["SlabTileTop"] or DB[r]["SlabTileTop"] then
-                                if math.random(1,3) == 1 then
-                                    sId = TLS.SlabTileTop
-                                end
-                            end
-                        elseif math.random(1,7) == 1 then
-                            sId = TLS.SlabTileTop
-                        end
-                    end
-                end
                 mod:SetTileFinal(x,y,sId)
                 if c ~= sId then
                     if r and DB[r] then
