@@ -48,13 +48,71 @@ function mod:TableToString(t) --Ignores functions.
 end
 
 function mod:StringToTable(s)
-    local suc, func = pcall(loadstring,"local TABLE = "..s.."; return TABLE")
+    local suc, func = pcall(loadstring, "local TABLE = "..s.."; return TABLE")
     if suc and func then
         local env = setfenv(func,{}) --don't give it acces to anything.
         return env()
     else
         return nil
     end
+end
+
+function mod:ReadSavedTiles()
+    local msg
+    if mod.IsBusy then
+        msg = graphics:AddMessage("Suspending request until previous request is finished.", math.huge)
+        msg:SetColours(1,0,0)
+    end
+    if msg then
+        repeat coroutine.yield() until not mod.IsBusy --wait until previous is completed, then continue
+        msg:Kill(true)
+    end
+    local msg = graphics:AddMessage("Collecting saved tiles please wait", math.huge)
+    local savedTiles = mod:StringToTable(love.filesystem.read("SavedTiles1.luat"))
+    if not savedTiles then
+        msg:SetColours(1,0,0)
+        msg:Update("Failed loading tiles. SavedTiles1.luat is corrupted. Please delete the file and try again.", 3)
+        print("LoadingTiles/Whoops/1")
+        return
+    end
+    msg:Update("Validating tiles", math.huge)
+    local i = 0
+    local list = {}
+    for id,struct in pairs(savedTiles) do
+        i = i + 1
+        local err, show
+        if type(id) == "string" and type(struct) == "table" then
+            for x,yList in ipairs(struct) do
+                if type(x) == "number" and type(yList) == "table" then
+                    for y,id in ipairs(yList) do
+                        if type(y) == "number" and type(id) == "string" then
+                            if not Textures.TileTextures[id] then
+                                err = true
+                            end
+                            if x == 1 and y == 1 then
+                                show = id
+                            end
+                        else
+                            err = true
+                        end
+                    end
+                else
+                    err = true
+                end
+            end
+        else
+            err = true
+        end
+        if err then
+            msg:Update("Tile "..i.." is corrupted, removing tile from list.", 3)
+            print(id.." is corrupted. Trying autofix...")
+            savedTiles[id] = nil
+        elseif show then
+            list[#list+1] = {Show = show, Struct = struct, Id = id}
+        end
+    end
+    msg:Update("Validation succesfull!", 0)
+    return list
 end
 
 function mod:SaveTiles() --save tiles in selected range
@@ -65,9 +123,9 @@ function mod:SaveTiles() --save tiles in selected range
     end
     threads:StartThread(threads:NewThread(function() --put this in a new thread so it won't stop the entire program
         mod.IsBusy = true
-        local msg = graphics:AddMessage("Collecting tiles please wait",math.huge)
+        local msg = graphics:AddMessage("Collecting tiles please wait", math.huge)
         local maxTiles = 0
-        local signX, signY = sign(ToolSettings.TileRange.EndX-ToolSettings.TileRange.StartX,1), sign(ToolSettings.TileRange.EndY-ToolSettings.TileRange.StartY,1)
+        local signX, signY = sign(ToolSettings.TileRange.EndX-ToolSettings.TileRange.StartX, 1), sign(ToolSettings.TileRange.EndY-ToolSettings.TileRange.StartY, 1)
         local sx = signX == 1 and ToolSettings.TileRange.StartX or ToolSettings.TileRange.EndX
         local sy = signY == 1 and ToolSettings.TileRange.StartY or ToolSettings.TileRange.EndY
         local struct = {}
@@ -103,8 +161,7 @@ function mod:SaveTiles() --save tiles in selected range
         local savedTiles = mod:StringToTable(love.filesystem.read("SavedTiles1.luat"))
         if not savedTiles then
             msg:SetColours(1,0,0)
-            print(savedTiles)
-            msg:Update("Failed saving tiles. SavedTiles1.luat is corrupted. Please delete the file and try again.",3)
+            msg:Update("Failed saving tiles. SavedTiles1.luat is corrupted. Please delete the file and try again.", 3)
             mod.IsBusy = false
             print("SavingTiles/Whoops/3")
             return
@@ -124,7 +181,7 @@ function mod:SaveTiles() --save tiles in selected range
         end
         if savedTiles[tileId] then
             msg:SetColours(1,0,0)
-            msg:Update("Failed to save due to a close already existing.",3)
+            msg:Update("Failed to save due to a similar tilepack already existing.", 3)
             mod.IsBusy = false
             return
         end

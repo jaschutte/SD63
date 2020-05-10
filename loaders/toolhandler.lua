@@ -187,26 +187,65 @@ function _G:SetTile(x,y,id) --checks if id, x and y is valid & applies a multiti
     end
 end
 
-function mod:FloodRecursive(x,y,id,changeToId)
+function mod:FloodCheck(x, y, id, checkFor, hit) --change this
+    local tile = graphics:IsTilePositionValid(x, y, id)
+    hit = hit or {}
+    if tile then
+        if tile == checkFor then
+            return hit
+        end
+        if hit[x] then
+            hit[x][y] = true
+        else
+            hit[x] = {[y] = true}
+        end
+        mod:FloodCheck(x, y+1, id, checkFor, hit)
+        mod:FloodCheck(x+1, y, id, checkFor, hit)
+        mod:FloodCheck(x, y-1, id, checkFor, hit)
+        mod:FloodCheck(x-1, y, id, checkFor, hit)
+    end
+end
+
+function mod:FloodRecursive(x,y,id,changeToId, _moveX, _moveY, whitelist)
     local tile = graphics:IsTilePositionValid(x,y,id)
+    _moveX, _moveY = _moveX or 1, _moveY or 1 --if one wants to the fill tool to 'jump'
+    if whitelist then --I assume this will be a table or nil, considering I will only use this once, ever. SOoooooooooooooo
+        if not whitelist[x] then
+            return
+        else
+            if not whitelist[x][y] then
+                return
+            end
+        end
+    end
     if tile then
         if tile == changeToId then
             return
         end
         _G:SetTile(x,y,changeToId)
-        mod:FloodRecursive(x,y+1,id,changeToId)
-        mod:FloodRecursive(x+1,y,id,changeToId)
-        mod:FloodRecursive(x,y-1,id,changeToId)
-        mod:FloodRecursive(x-1,y,id,changeToId)
+        mod:FloodRecursive(x, y+_moveY, id, changeToId, _moveX, _moveY, whitelist)
+        mod:FloodRecursive(x+_moveX, y, id, changeToId, _moveX, _moveY, whitelist)
+        mod:FloodRecursive(x, y-_moveY, id, changeToId, _moveX, _moveY, whitelist)
+        mod:FloodRecursive(x-_moveX, y, id, changeToId, _moveX, _moveY, whitelist)
     end
 end
 
 function mod:Update()
     if ToolSettings.CurrentDisplay == "Tiles" and not ToolSettings.UIBlockingMouse then
         if ToolSettings.MouseDown then
-            local mx, my = graphics:ScreenToTile(ToolSettings.MouseX,ToolSettings.MouseY)
             if ToolSettings.TileTool == "normal" then
-                _G:SetTile(mx,my,ToolSettings.EraserMode and "0" or ToolSettings.SelectedTile)
+                local mx, my = graphics:ScreenToTile(ToolSettings.MouseX, ToolSettings.MouseY)
+                if type(ToolSettings.SelectedTile) == "string" then
+                    _G:SetTile(mx,my,ToolSettings.EraserMode and "0" or ToolSettings.SelectedTile)
+                elseif type(ToolSettings.SelectedTile) == "table" then --tilepack support
+                    for x,yList in ipairs(ToolSettings.SelectedTile) do
+                        if type(yList) == "table" then
+                            for y,id in ipairs(yList) do
+                                _G:SetTile(mx + x - 1, my + y - 1, ToolSettings.EraserMode and "0" or id)
+                            end
+                        end
+                    end
+                end
             end
         end
         if ToolSettings.TileTool == "area" then
@@ -240,7 +279,7 @@ function mod:MouseDown(b)
                 local x, y = graphics:ScreenToTile(ToolSettings.MouseX, ToolSettings.MouseY)
                 local tile = graphics:IsTilePositionValid(x,y)
                 if tile then
-                    mod:FloodRecursive(x,y, tile,"0")
+                    mod:FloodRecursive(x, y, tile, "0")
                 end
             end
         end
@@ -255,10 +294,36 @@ function mod:MouseDown(b)
                 end
             end
             if ToolSettings.TileTool == "fill" then
-                local x, y = graphics:ScreenToTile(ToolSettings.MouseX, ToolSettings.MouseY)
-                local tile = graphics:IsTilePositionValid(x,y)
-                if tile then
-                    mod:FloodRecursive(x,y, tile,ToolSettings.EraserMode and "0" or ToolSettings.SelectedTile)
+                if type(ToolSettings.SelectedTile) == "string" then
+                    local x, y = graphics:ScreenToTile(ToolSettings.MouseX, ToolSettings.MouseY)
+                    local tile = graphics:IsTilePositionValid(x,y)
+                    if tile then
+                        mod:FloodRecursive(x, y, tile, ToolSettings.EraserMode and "0" or ToolSettings.SelectedTile)
+                    end
+                elseif type(ToolSettings.SelectedTile) == "table" then
+                    local width = #ToolSettings.SelectedTile
+                    if width >= 1 then --check if it is an array exists
+                        local height = type(ToolSettings.SelectedTile[1]) == "table" and #ToolSettings.SelectedTile[1] or 0
+                        if height >= 1 then
+                            local mx, my = graphics:ScreenToTile(ToolSettings.MouseX, ToolSettings.MouseY)
+                            local tile = graphics:IsTilePositionValid(mx, my)
+                            if tile then
+                                local white = mod:FloodCheck(mx, my, tile, ToolSettings.EraserMode and "0" or ToolSettings.SelectedTile) --get the whitelist
+                                for x,yList in ipairs(ToolSettings.SelectedTile) do
+                                    for y,id in ipairs(yList) do
+                                        local tile = graphics:IsTilePositionValid(mx + x - 1, my + y - 1)
+                                        if tile then --final check AND GO!!!!
+                                            mod:FloodRecursive(mx + x - 1, my + y - 1, tile, ToolSettings.EraserMode and "0" or id, width, height, white)
+                                        end
+                                    end
+                                end
+                            end
+                        else
+                            print("WHAAAAAAAAAAT!? 1 WIDTH BUT 0 HEIGHT?!")
+                        end
+                    else
+                        print("Interresting, you're trying to draw something small than 1... May I ask how?")
+                    end
                 end
             end
         end

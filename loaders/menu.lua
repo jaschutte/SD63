@@ -216,7 +216,7 @@ function mod:GenerateTools(tileTools)
             mainFrame.Collision.OnEnter = function() end
             mainFrame.Collision.OnLeave = function() end
             frames[#frames+1] = mainFrame
-            for cat = 100,650,50 do
+            for cat = 100,650,50 do --generate theme buttons
                 local button = graphics:NewFrame(mainFrame.X-111+(cat/50-2)%4*74,WindowY/2-42.5+math.floor((cat/50-2)/4)*29,72,27,1000,"Menu")
                 button.ApplyZoom = false
                 button.ScreenPosition = true
@@ -235,6 +235,25 @@ function mod:GenerateTools(tileTools)
                 button.Visible = true
                 frames[#frames+1] = button
             end
+            --generate saved tiles 1 button
+            local button = graphics:NewFrame(mainFrame.X-111,WindowY/2+44.5,72,27,1000,"Menu")
+            button.ApplyZoom = false
+            button.ScreenPosition = true
+            button.AnchorX = 0.5
+            button.AnchorY = 0.5
+            button.FitImageInsideWH = true
+            button:SetImage(Textures.MenuTextures["THEME/TILES/Saved1"])
+            button.Collision.DetectHover = true
+            button.Collision.OnClick = function()
+                ToolSettings.TileCatagory = "Saved1"
+                mod:GenerateIcons(true)
+                mod:GenerateTools(true)
+                graphics:MassDelete(frames)
+                ClickBeforeEvents.ThemeAfterPress = nil
+            end
+            button.Visible = true
+            frames[#frames+1] = button
+
             ClickBeforeEvents.ThemeAfterPress = function(mx,my,b)
                 if not mainFrame:CheckCollision(mx,my) then
                     graphics:MassDelete(frames)
@@ -278,34 +297,94 @@ function mod:GenerateIcons(tileIcons)
     mod.Icons = {}
     if tileIcons then
         local cat = Catagories.TileCatagories[ToolSettings.TileCatagory]
-        local offset = LD.Settings.ToolHolder.X+(LD.Settings.ToolHolder.SizeX-2)%34/2
-        local xMax = math.floor(LD.Settings.ToolHolder.SizeX/34)
-        for i,id in ipairs(cat) do
-            local icon = graphics:NewFrame(offset+34*((i-1)%xMax)+18,LD.Settings.ToolHolder.Y+76+34*math.floor((i-1)/xMax),32,32,2,"Menu")
-            icon:SetImage(Textures.TileTextures[id])
-            icon:SetColours(.3,.3,.3,1,true)
-            icon.Collision.DetectHover = true
-            icon.FitImageInsideWH = true
-            icon.KeepBackground = true
-            icon.ScreenPosition = true
-            icon.ApplyZoom = false
-            icon.Clips = {
-                AnchorX = 0;
-                AnchorY = 0;
-                X = offset;
-                Y = LD.Settings.ToolHolder.Y+58;
-                W = math.floor(LD.Settings.ToolHolder.SizeX/34)*34+2;
-                H = LD.Settings.ToolHolder.SizeY-190;
-            }
-            icon.Collision.OnClick = function()
-                if ToolSettings.TileTool == "fill" then
-                    love.mouse.setCursor(Textures.RawTextures.Cursors.bucket)
+        if cat then --if catagory exists, draw the button/icon thingies
+            local offset = LD.Settings.ToolHolder.X+(LD.Settings.ToolHolder.SizeX-2)%34/2
+            local xMax = math.floor(LD.Settings.ToolHolder.SizeX/34)
+            for i,id in ipairs(cat) do
+                local icon = graphics:NewFrame(offset+34*((i-1)%xMax)+18,LD.Settings.ToolHolder.Y+76+34*math.floor((i-1)/xMax),32,32,2,"Menu")
+                icon:SetImage(Textures.TileTextures[id])
+                icon:SetColours(.3,.3,.3,1,true)
+                icon.Collision.DetectHover = true
+                icon.FitImageInsideWH = true
+                icon.KeepBackground = true
+                icon.ScreenPosition = true
+                icon.ApplyZoom = false
+                icon.Clips = {
+                    AnchorX = 0;
+                    AnchorY = 0;
+                    X = offset;
+                    Y = LD.Settings.ToolHolder.Y+58;
+                    W = math.floor(LD.Settings.ToolHolder.SizeX/34)*34+2;
+                    H = LD.Settings.ToolHolder.SizeY-190;
+                }
+                icon.Collision.OnClick = function()
+                    if ToolSettings.TileTool == "fill" then
+                        love.mouse.setCursor(Textures.RawTextures.Cursors.bucket)
+                    end
+                    ToolSettings.EraserMode = false
+                    ToolSettings.SelectedTile = id
                 end
-                ToolSettings.EraserMode = false
-                ToolSettings.SelectedTile = id
+                icon.Visible = true
+                mod.Icons[i] = icon
             end
-            icon.Visible = true
-            mod.Icons[i] = icon
+        elseif ToolSettings.TileCatagory == "Saved1" then
+            local cat = decode:ReadSavedTiles() --get the saved tiles
+            if not cat then
+                graphics:AddMessage("Failed to load saves tiles, no tiles could be collected.", 1)
+                return
+            end
+            local offset = LD.Settings.ToolHolder.X+(LD.Settings.ToolHolder.SizeX-2)%68/2
+            local xMax = math.floor(LD.Settings.ToolHolder.SizeX/68)
+            for i,collection in ipairs(cat) do
+                local icon = graphics:NewFrame(offset+68*((i-1)%xMax)+18,LD.Settings.ToolHolder.Y+76+34*math.floor((i-1)/xMax),32,32,2,"Menu")
+                icon:SetImage(Textures.TileTextures[collection.Show])
+                icon:SetColours(.3,.3,.3,1,true)
+                icon.Collision.DetectHover = true
+                icon.FitImageInsideWH = true
+                icon.KeepBackground = true
+                icon.ScreenPosition = true
+                icon.ApplyZoom = false
+                icon.Clips = {
+                    AnchorX = 0;
+                    AnchorY = 0;
+                    X = offset;
+                    Y = LD.Settings.ToolHolder.Y+58;
+                    W = math.floor(LD.Settings.ToolHolder.SizeX/34)*34+2;
+                    H = LD.Settings.ToolHolder.SizeY-190;
+                }
+                icon.Collision.OnClick = function()
+                    if ToolSettings.TileTool == "fill" then
+                        love.mouse.setCursor(Textures.RawTextures.Cursors.bucket)
+                    end
+                    ToolSettings.EraserMode = false
+                    ToolSettings.SelectedTile = collection.Struct
+                end
+                icon.Visible = true
+                mod.Icons[i] = icon
+
+                --delete tile button
+                local icon = graphics:NewFrame(offset+68*((i-1)%xMax)+52,LD.Settings.ToolHolder.Y+76+34*math.floor((i-1)/xMax),32,32,2,"Menu")
+                icon:SetImage(Textures.HUDTextures.genericClose)
+                icon:SetColours(.3,.3,.3,1,true)
+                icon.Collision.DetectHover = true
+                icon.FitImageInsideWH = true
+                icon.KeepBackground = true
+                icon.ScreenPosition = true
+                icon.ApplyZoom = false
+                icon.Clips = {
+                    AnchorX = 0;
+                    AnchorY = 0;
+                    X = offset;
+                    Y = LD.Settings.ToolHolder.Y+58;
+                    W = math.floor(LD.Settings.ToolHolder.SizeX/34)*34+2;
+                    H = LD.Settings.ToolHolder.SizeY-190;
+                }
+                icon.Collision.OnClick = function()
+                    --delete logic
+                end
+                icon.Visible = true
+                mod.Icons[i] = icon
+            end
         end
     else
 

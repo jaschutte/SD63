@@ -381,7 +381,21 @@ function mod:DrawHovers()
                 love.graphics.rectangle("fill",x,y,32,32)
             else
                 love.graphics.setColor(1,1,1,.5)
-                love.graphics.draw(Textures.TileTextures[ToolSettings.SelectedTile],x,y,0,CameraPosition.Z, CameraPosition.Z)
+                if type(ToolSettings.SelectedTile) == "string" then
+                    love.graphics.draw(Textures.TileTextures[ToolSettings.SelectedTile], x, y, 0, CameraPosition.Z, CameraPosition.Z)
+                elseif type(ToolSettings.SelectedTile) == "table" then --tilepack support
+                    for x,yList in ipairs(ToolSettings.SelectedTile) do
+                        if type(yList) == "table" then
+                            for y,id in ipairs(yList) do
+                                local mx, my = mod:ScreenToTile(ToolSettings.MouseX,ToolSettings.MouseY)
+                                if mod:IsTilePositionValid(mx + x - 1, my + y - 1) then
+                                    mx, my = mod:TileToScreen(mx + x - 1, my + y - 1)
+                                    love.graphics.draw(Textures.TileTextures[id], mx, my, 0, CameraPosition.Z, CameraPosition.Z)
+                                end
+                            end
+                        end
+                    end
+                end
             end
         end
     end
