@@ -42,7 +42,7 @@ function mod:Snapshot()
 end
 
 function mod:CommitChange(pos)
-    if self.Recording[pos[1]] then
+    if self.Recording[pos[1]]-- then
         --self.Recording[pos[1]][pos[2]] = true
     --else
         --self.Recording[pos[1]] = {[pos[2]] = true}
