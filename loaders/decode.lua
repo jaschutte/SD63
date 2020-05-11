@@ -10,6 +10,7 @@ local function sign(x,f) --get the sign of an number. Option to replace 0 with f
 end
 
 function mod:ArrayToString(a) --only give arrays to this and NOT DIRECTIONARIES. Ignores functions.
+    a = a or {}
     local s = "{"
     for _,v in ipairs(a) do
         if type(v) == "table" then
@@ -28,6 +29,7 @@ function mod:ArrayToString(a) --only give arrays to this and NOT DIRECTIONARIES.
 end
 
 function mod:TableToString(t) --Ignores functions.
+    t = t or {}
     local s = "{"
     for k,v in pairs(t) do
         if type(v) == "table" then
@@ -48,6 +50,7 @@ function mod:TableToString(t) --Ignores functions.
 end
 
 function mod:StringToTable(s)
+    s = s or ""
     local suc, func = pcall(loadstring, "local TABLE = "..s.."; return TABLE")
     if suc and func then
         local env = setfenv(func,{}) --don't give it acces to anything.
