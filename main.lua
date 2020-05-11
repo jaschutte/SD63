@@ -90,7 +90,6 @@ _G.LD = {
     };
 }
 
-local wxLua = require("wx")
 local graphics = require("loaders.graphics")
 local menu = require("loaders.menu")
 local threads = require("loaders.threading")
