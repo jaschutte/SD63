@@ -187,22 +187,25 @@ function _G:SetTile(x,y,id) --checks if id, x and y is valid & applies a multiti
     end
 end
 
-function mod:FloodCheck(x, y, id, checkFor, hit) --change this
+mod._tempFlood = {}
+function mod:FloodCheck(x, y, id, checkFor) --change this, it currently overflows
     local tile = graphics:IsTilePositionValid(x, y, id)
-    hit = hit or {}
     if tile then
         if tile == checkFor then
-            return hit
+            return
         end
-        if hit[x] then
-            hit[x][y] = true
+        if mod._tempFlood[x] then
+            if mod._tempFlood[x][y] then
+                return
+            end
+            mod._tempFlood[x][y] = true
         else
-            hit[x] = {[y] = true}
+            mod._tempFlood[x] = {[y] = true}
         end
-        mod:FloodCheck(x, y+1, id, checkFor, hit)
-        mod:FloodCheck(x+1, y, id, checkFor, hit)
-        mod:FloodCheck(x, y-1, id, checkFor, hit)
-        mod:FloodCheck(x-1, y, id, checkFor, hit)
+        mod:FloodCheck(x, y+1, id, checkFor)
+        mod:FloodCheck(x+1, y, id, checkFor)
+        mod:FloodCheck(x, y-1, id, checkFor)
+        mod:FloodCheck(x-1, y, id, checkFor)
     end
 end
 
@@ -308,12 +311,13 @@ function mod:MouseDown(b)
                             local mx, my = graphics:ScreenToTile(ToolSettings.MouseX, ToolSettings.MouseY)
                             local tile = graphics:IsTilePositionValid(mx, my)
                             if tile then
-                                local white = mod:FloodCheck(mx, my, tile, ToolSettings.EraserMode and "0" or ToolSettings.SelectedTile) --get the whitelist
+                                mod._tempFlood = {}
+                                mod:FloodCheck(mx, my, tile, ToolSettings.EraserMode and "0" or ToolSettings.SelectedTile) --get the whitelist
                                 for x,yList in ipairs(ToolSettings.SelectedTile) do
                                     for y,id in ipairs(yList) do
                                         local tile = graphics:IsTilePositionValid(mx + x - 1, my + y - 1)
                                         if tile then --final check AND GO!!!!
-                                            mod:FloodRecursive(mx + x - 1, my + y - 1, tile, ToolSettings.EraserMode and "0" or id, width, height, white)
+                                            mod:FloodRecursive(mx + x - 1, my + y - 1, tile, ToolSettings.EraserMode and "0" or id, width, height, mod._tempFlood)
                                         end
                                     end
                                 end
