@@ -363,7 +363,7 @@ function mod:GenerateIcons(tileIcons)
                 mod.Icons[i] = icon
 
                 --delete tile button
-                local icon = graphics:NewFrame(offset+68*((i-1)%xMax)+52,LD.Settings.ToolHolder.Y+76+34*math.floor((i-1)/xMax),32,32,2,"Menu")
+                icon = graphics:NewFrame(offset+68*((i-1)%xMax)+52,LD.Settings.ToolHolder.Y+76+34*math.floor((i-1)/xMax),32,32,2,"Menu")
                 icon:SetImage(Textures.HUDTextures.genericClose)
                 icon:SetColours(.3,.3,.3,1,true)
                 icon.Collision.DetectHover = true
@@ -381,9 +381,11 @@ function mod:GenerateIcons(tileIcons)
                 }
                 icon.Collision.OnClick = function()
                     --delete logic
+                    decode:DeleteTiles(collection.Id)
+                    mod:GenerateIcons(true)
                 end
                 icon.Visible = true
-                mod.Icons[i] = icon
+                mod.Icons[#cat+i] = icon
             end
         end
     else

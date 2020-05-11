@@ -1,4 +1,4 @@
-
+--[[
 local otherWindowModule = require("uiWindow")
 local function sort(a,b) return a.Z < b.Z end
 
@@ -154,7 +154,7 @@ function _G.ReadLevelCode(code,antiSave,isStart)
                     else
                         params[#params+1] = 0
                     end
-                    if itemImages[params[1]] == nil then
+                    if itemImages[params[1]]--[[ == nil then
                         error("Item does not exist.")
                         return
                     end
@@ -436,3 +436,4 @@ function _G.GenerateLevelCode() --generate the save code
 end
 
 return true
+--]]

@@ -1,4 +1,4 @@
-
+--[[
 local function mathclamp(x,min,max)
     return math.max(min,math.min(x,max))
 end
@@ -181,7 +181,7 @@ function mod.Animations.Get8(saveparams,item,rot)
     local self = {}
     self.X = 0
     self.Y = 0
-    self.Image = itemSkins["7+8"][item.SaveParams[8]]
+    self.Image = itemSkins["7+8"][item.SaveParams[8]]--[[
     self.ScaleX = item.ScaleX
     self.ScaleY = item.ScaleY
     self.Width = self.Image:getWidth()/2
@@ -266,3 +266,4 @@ function mod.Animations.Get18(saveparams,item)
 end
 
 return mod
+--]]

@@ -1,4 +1,4 @@
-
+--[[
 local songNames = {"Mushroom Kingdom","Bob-Omb Battlefield","Secret Course #1","Secret Course #2","Rainbow Ride","Boo's Mansion","Hazy Maze Cave","Snowman's Land","Lethal Lava Land","Shifting Sand Land","Bowser's Castle","Boss Fight 1","Boss Fight 2","Floater Land","Terror Theme","The Final Battle","The Meteor","Inside the Castle","No Music"}
 local jsonModule = require("dkjson")
 local wxLua = require("wx")
@@ -392,7 +392,7 @@ function mod:MouseDown(r,g,b)
 
                 If this problem persist please report the following error to jaschutte on the runouw forum:
 
-                ]]..e)
+                ]]--[[..e)
         end
     elseif button == "ANIMATIONS" then --SETTINGS (yes finally)
         mod.LDSettings.ShowAnimations = not mod.LDSettings.ShowAnimations
@@ -700,7 +700,7 @@ function mod:OpenWindow(id) --opens windows
         --[[self.Grid:SetDefaultCellTextColour(white)
         self.Grid:SetDefaultCellBackgroundColour(dark)
         self.Grid:SetGridLineColour(darkGrey)]]
-        self.MainLayer = wxLua.wxPanel(self.Dialog,wxLua.wxID_ANY,wxLua.wxDefaultPosition,wxLua.wxSize(self.Width,self.Height))
+        --[[self.MainLayer = wxLua.wxPanel(self.Dialog,wxLua.wxID_ANY,wxLua.wxDefaultPosition,wxLua.wxSize(self.Width,self.Height))
         self.PrevSong = wxLua.wxBitmapButton(self.MainLayer,4,backBitmap,wxLua.wxPoint(234,44),wxLua.wxSize(10,10),wxLua.wxNO_BORDER)
         self.NextSong = wxLua.wxBitmapButton(self.MainLayer,5,nextBitmap,wxLua.wxPoint(264,44),wxLua.wxSize(10,10),wxLua.wxNO_BORDER)
         self.ImageButton = wxLua.wxBitmapButton(self.MainLayer,6,gameBackgrounds[self.LevelConfig.BackgroundId] == nil and gameBackgrounds[15] or gameBackgrounds[self.LevelConfig.BackgroundId],wxLua.wxPoint(12,88),wxLua.wxSize(200,200),wxLua.wxNO_BORDER)
@@ -775,7 +775,7 @@ function mod:OpenWindow(id) --opens windows
         if self.Id == 1 then
             --[[self.Textboxes = {
                 {mod.LevelConfig.Name,"txt",12,41,120,14,function(txt) mod.LevelConfig.Name = txt end}
-            }--]]
+            }--]]--[[
             self.Counters = {
                 {280,55,"LevelConfig","SongName"}
             }
@@ -798,7 +798,7 @@ function mod:OpenWindow(id) --opens windows
                 end
                 t.Incement = mod.LevelConfig.Incement
                 love.filesystem.write("Settings.json",jsonModule.encode(t))
-            end--]]
+            end--]]--[[
             self.Counters = {
                 {160,56,"LDSettings","ShowAnimations"},
                 {163,75,"LDSettings","ShowPlayerView"},
@@ -815,7 +815,7 @@ function mod:OpenWindow(id) --opens windows
                 end
                 t.Incement = mod.LevelConfig.Incement
                 love.filesystem.write("Settings.json",jsonModule.encode(t))
-            end--]]
+            end--]]--[[
             self.Counters = {}
         else
             self.Counters = {}
@@ -840,8 +840,8 @@ function mod:Draw()
             love.graphics.setColor(0,0,0)
             for _,v in pairs(self.Counters) do
                 if v[3] ~= "X" and v[3] ~= "Y" then
-                    love.graphics.print(tostring(mod[v[3]][v[4]]),v[1]+self.X,v[2]+self.Y)
-                else
+                    love.graphics.print(tostring(mod[v[3]]--[[[v[4]]--),v[1]+self.X,v[2]+self.Y)
+                --[[else
                     if v[3] == "X" then
                         love.graphics.print(levelSizeX,v[1]+self.X,v[2]+self.Y)
                     else
@@ -876,3 +876,4 @@ function mod:Draw()
 end
 
 return mod
+--]]

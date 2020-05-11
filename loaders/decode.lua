@@ -57,15 +57,39 @@ function mod:StringToTable(s)
     end
 end
 
+function mod:DeleteTiles(id)
+    local msg
+    if mod.IsBusy then
+        msg = graphics:AddMessage("Request failed, wait for the previous request to be finished first!", math.huge)
+        msg:SetColours(1,0,0)
+        return
+    end
+    local msg = graphics:AddMessage("Collecting saved tiles please wait", math.huge)
+    local savedTiles = mod:StringToTable(love.filesystem.read("SavedTiles1.luat"))
+    if not savedTiles then
+        msg:SetColours(1,0,0)
+        msg:Update("Failed loading tiles. SavedTiles1.luat is corrupted. Please delete the file and try again.", 3)
+        print("LoadingTiles/Whoops/1")
+        return
+    end
+    msg:Update("Deleting saved tile...")
+    if savedTiles[id] then
+        savedTiles[id] = nil
+        local str = mod:TableToString(savedTiles)
+        love.filesystem.write("SavedTiles1.luat",str)
+        msg:Update("Succesfully deleted tile!", 3)
+    else
+        msg:SetColours(1,0,0)
+        msg:Update("Tile wasn't found in SavedTiles1.luat. No deletion accured.", 3)
+    end
+end
+
 function mod:ReadSavedTiles()
     local msg
     if mod.IsBusy then
-        msg = graphics:AddMessage("Suspending request until previous request is finished.", math.huge)
+        msg = graphics:AddMessage("Request failed, wait for the previous request to be finished first!", math.huge)
         msg:SetColours(1,0,0)
-    end
-    if msg then
-        repeat coroutine.yield() until not mod.IsBusy --wait until previous is completed, then continue
-        msg:Kill(true)
+        return
     end
     local msg = graphics:AddMessage("Collecting saved tiles please wait", math.huge)
     local savedTiles = mod:StringToTable(love.filesystem.read("SavedTiles1.luat"))
