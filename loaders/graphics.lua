@@ -222,7 +222,7 @@ function mod:NewFrame(x,y,w,h,z,layer)
             w, h = w*obj.ScaleX, h*obj.ScaleY
         end
         if obj.ApplyZoom then
-            w, h = w*CameraPosition.Z, h*CameraPosition.Z
+            --w, h = w*CameraPosition.Z, h*CameraPosition.Z
             if not ignoreAnchors then
                 x, y = x*CameraPosition.Z-w*obj.AnchorX, y*CameraPosition.Z-h*obj.AnchorY
             else
@@ -279,6 +279,10 @@ function mod:NewFrame(x,y,w,h,z,layer)
     mod.Frames[obj.Id] = obj
     insertFrame(obj)
     return obj
+end
+
+function mod:ScreenToWorld(x, y)
+    return CameraPosition.X - x / CameraPosition.Z, CameraPosition.Y - y / CameraPosition.Z
 end
 
 function mod:TileToScreen(x,y) --convert tile units to screen units
@@ -378,7 +382,7 @@ function mod:DrawHovers()
             x, y = mod:TileToScreen(x,y)
             if ToolSettings.EraserMode then
                 love.graphics.setColor(1,0,0,.5)
-                love.graphics.rectangle("fill",x,y,32,32)
+                love.graphics.rectangle("fill",x,y,32 * CameraPosition.Z,32 * CameraPosition.Z)
             else
                 love.graphics.setColor(1,1,1,.5)
                 if type(ToolSettings.SelectedTile) == "string" then

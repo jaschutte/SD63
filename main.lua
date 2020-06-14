@@ -4,7 +4,6 @@ love.window.setTitle("Super Designer 63")
 love.window.setMode(WindowX,WindowY,{resizable = true, minwidth=500, minheight=375, vsync = false})
 love.graphics.setBackgroundColor(0,0,.5)
 
-_G.__ID = 0
 _G.CameraPosition = {X = 0, Y = 0, Z = 1} --Z is camera zoom; z<1 = zoomout; x>1 = zoomin
 _G.Catagories = {
     ItemCatagories = {};
@@ -13,6 +12,7 @@ _G.Catagories = {
 _G.Textures = {
     MenuTextures = {};
     TileTextures = {};
+    ItemTextures = {};
     HUDTextures = {};
     RawTextures = {
         Cursors = {};
@@ -20,10 +20,7 @@ _G.Textures = {
 }
 _G.ClickAfterEvents = {}
 _G.ClickBeforeEvents = {}
-_G.GetId = function()
-    __ID = __ID + 1
-    return __ID
-end
+_G.GetId = setmetatable({id = 0}, {__call = function(tab) tab.id = tab.id + 1 return tab.id end})
 _G.Lerp = function(x,y,t)
     return (1-t)*x + t*y
 end
@@ -125,6 +122,18 @@ function love.load()
                 Textures.TileTextures[id] = love.graphics.newImage(subDir.."/"..texture)
                 Catagories.TileCatagories[group][num] = id
             end
+        end
+    end
+    --item textures
+    local dir = "textures/items"
+    for _,folder in ipairs(love.filesystem.getDirectoryItems(dir)) do
+        local subDir = dir.."/"..folder
+        Catagories.ItemCatagories[tonumber(folder)] = {}
+        for _,texture in ipairs(love.filesystem.getDirectoryItems(subDir)) do
+            local group = tonumber(folder)
+            local num = tonumber(texture:sub(1,-5))
+            Textures.ItemTextures[group + num] = love.graphics.newImage(subDir.."/"..texture)
+            Catagories.ItemCatagories[group][num] = group + num
         end
     end
     --cursor icons

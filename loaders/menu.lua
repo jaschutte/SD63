@@ -95,34 +95,37 @@ end
 function mod:GenerateTools(tileTools)
     graphics:MassDelete(mod.TileTools)
     graphics:MassDelete(mod.ItemTools)
-    mod.TileTools.MoveUp = graphics:NewFrame(
-        LD.Settings.ToolHolder.X+18,LD.Settings.ToolHolder.Y+LD.Settings.ToolHolder.SizeY-114,
-        16,16,
-        2,"Menu"
-    )
-    mod.TileTools.MoveUp:SetImage(Textures.MenuTextures.moveUp)
-    mod.TileTools.MoveUp.ApplyZoom = false
-    mod.TileTools.MoveUp.ScreenPosition = true
-    mod.TileTools.MoveUp.Collision.DetectHover = true
-    mod.TileTools.MoveUp.Collision.OnClick = function()
-        mod:MoveIcons(0,-64)
-    end
-    mod.TileTools.MoveUp.Visible = true
-    mod.TileTools.MoveDown = graphics:NewFrame(
-        LD.Settings.ToolHolder.X+18,LD.Settings.ToolHolder.Y+LD.Settings.ToolHolder.SizeY-98,
-        16,16,
-        2,"Menu"
-    )
-    mod.TileTools.MoveDown:SetImage(Textures.MenuTextures.moveDown)
-    mod.TileTools.MoveDown.ApplyZoom = false
-    mod.TileTools.MoveDown.ScreenPosition = true
-    mod.TileTools.MoveDown.Collision.DetectHover = true
-    mod.TileTools.MoveDown.Collision.OnClick = function()
-        mod:MoveIcons(0,64)
-    end
-    mod.TileTools.MoveDown.Visible = true
+    mod.TileTools = {}
+    mod.ItemTools = {}
     if tileTools then
         mod.TileTools = {}
+        --I can't put these infront of the if statement. Why not? I have no clue
+        mod.TileTools.MoveUp = graphics:NewFrame(
+            LD.Settings.ToolHolder.X+18,LD.Settings.ToolHolder.Y+LD.Settings.ToolHolder.SizeY-114,
+            16,16,
+            2,"Menu"
+        )
+        mod.TileTools.MoveUp:SetImage(Textures.MenuTextures.moveUp)
+        mod.TileTools.MoveUp.ApplyZoom = false
+        mod.TileTools.MoveUp.ScreenPosition = true
+        mod.TileTools.MoveUp.Collision.DetectHover = true
+        mod.TileTools.MoveUp.Collision.OnClick = function()
+            mod:MoveIcons(0,-64)
+        end
+        mod.TileTools.MoveUp.Visible = true
+        mod.TileTools.MoveDown = graphics:NewFrame(
+            LD.Settings.ToolHolder.X+18,LD.Settings.ToolHolder.Y+LD.Settings.ToolHolder.SizeY-98,
+            16,16,
+            2,"Menu"
+        )
+        mod.TileTools.MoveDown:SetImage(Textures.MenuTextures.moveDown)
+        mod.TileTools.MoveDown.ApplyZoom = false
+        mod.TileTools.MoveDown.ScreenPosition = true
+        mod.TileTools.MoveDown.Collision.DetectHover = true
+        mod.TileTools.MoveDown.Collision.OnClick = function()
+            mod:MoveIcons(0,64)
+        end
+        mod.TileTools.MoveDown.Visible = true
         --tile only
         mod.TileTools.Pencil = graphics:NewFrame(
             LD.Settings.ToolHolder.X+44,LD.Settings.ToolHolder.Y+LD.Settings.ToolHolder.SizeY-106,
@@ -263,6 +266,33 @@ function mod:GenerateTools(tileTools)
         end
         mod.TileTools.ChangeCatagory.Visible = true
     else
+        mod.ItemTools.MoveUp = graphics:NewFrame(
+            LD.Settings.ToolHolder.X+18,LD.Settings.ToolHolder.Y+LD.Settings.ToolHolder.SizeY-114,
+            16,16,
+            2,"Menu"
+        )
+        mod.ItemTools.MoveUp:SetImage(Textures.MenuTextures.moveUp)
+        mod.ItemTools.MoveUp.ApplyZoom = false
+        mod.ItemTools.MoveUp.ScreenPosition = true
+        mod.ItemTools.MoveUp.Collision.DetectHover = true
+        mod.ItemTools.MoveUp.Collision.OnClick = function()
+            mod:MoveIcons(0,-64)
+        end
+        mod.ItemTools.MoveUp.Visible = true
+        mod.ItemTools.MoveDown = graphics:NewFrame(
+            LD.Settings.ToolHolder.X+18,LD.Settings.ToolHolder.Y+LD.Settings.ToolHolder.SizeY-98,
+            16,16,
+            2,"Menu"
+        )
+        mod.ItemTools.MoveDown:SetImage(Textures.MenuTextures.moveDown)
+        mod.ItemTools.MoveDown.ApplyZoom = false
+        mod.ItemTools.MoveDown.ScreenPosition = true
+        mod.ItemTools.MoveDown.Collision.DetectHover = true
+        mod.ItemTools.MoveDown.Collision.OnClick = function()
+            mod:MoveIcons(0,64)
+        end
+        mod.ItemTools.MoveDown.Visible = true
+        --tiles only
         mod.ItemTools.Main = graphics:NewFrame(
             LD.Settings.ToolHolder.X+44,LD.Settings.ToolHolder.Y+LD.Settings.ToolHolder.SizeY-106,
             32,32,
@@ -389,7 +419,35 @@ function mod:GenerateIcons(tileIcons)
             end
         end
     else
-
+        local cat = Catagories.ItemCatagories[ToolSettings.ItemCatagory] --get the catagory
+        if cat then
+            local offset = LD.Settings.ToolHolder.X+(LD.Settings.ToolHolder.SizeX-2)%34/2
+            local xMax = math.floor(LD.Settings.ToolHolder.SizeX/34)
+            for i,id in ipairs(cat) do --ipairs to keep looping consistent
+                local icon = graphics:NewFrame(offset+34*((i-1)%xMax)+18,LD.Settings.ToolHolder.Y+76+34*math.floor((i-1)/xMax),32,32,2,"Menu")
+                icon:SetImage(Textures.ItemTextures[id])
+                icon:SetColours(.3,.3,.3,1,true)
+                icon.Collision.DetectHover = true
+                icon.FitImageInsideWH = true
+                icon.KeepBackground = true
+                icon.ScreenPosition = true
+                icon.ApplyZoom = false
+                icon.Clips = {
+                    AnchorX = 0;
+                    AnchorY = 0;
+                    X = offset;
+                    Y = LD.Settings.ToolHolder.Y+58;
+                    W = math.floor(LD.Settings.ToolHolder.SizeX/34)*34+2;
+                    H = LD.Settings.ToolHolder.SizeY-190;
+                }
+                icon.Collision.OnClick = function()
+                    ToolSettings.EraserMode = false
+                    ToolSettings.SelectedItem = id
+                end
+                icon.Visible = true
+                mod.Icons[i] = icon
+            end
+        end
     end
 end
 

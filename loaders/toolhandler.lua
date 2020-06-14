@@ -233,6 +233,23 @@ function mod:FloodRecursive(x,y,id,changeToId, _moveX, _moveY, whitelist)
     end
 end
 
+function mod:PlaceItem(id, x, y)
+    if Textures.ItemTextures[id] then
+        local wX, wY = x - CameraPosition.X, y - CameraPosition.Y
+        local item = {}
+        item.ItemId = id
+        item.Frame = graphics:NewFrame(wX, wY, nil, nil, 5, "Menu")
+        item.Frame:SetImage(Textures.ItemTextures[id])
+        item.Frame:Resize(item.Frame.ImageData.W, item.Frame.ImageData.H)
+        --item.ScreenPosition = true
+        item.Frame.Visible = true
+        item.Id = GetId()
+        return item
+    else
+        print("Game used INVALID ITEM! It was ineffective..")
+    end
+end
+
 function mod:Update()
     if ToolSettings.CurrentDisplay == "Tiles" and not ToolSettings.UIBlockingMouse then
         if ToolSettings.MouseDown then
@@ -330,6 +347,8 @@ function mod:MouseDown(b)
                     end
                 end
             end
+        elseif not ToolSettings.UIBlockingMouse then
+            mod:PlaceItem(ToolSettings.SelectedItem, ToolSettings.MouseX, ToolSettings.MouseY)
         end
     end
     mod.REC = {}
