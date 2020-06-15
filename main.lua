@@ -39,8 +39,10 @@ _G.ToolSettings = {
     EraserMode = false;
     ItemTool = "normal";
     TileTool = "normal";
+    RememberTileTool = "normal";
+    CtrlDown = false;
     SelectedTile = "2K";
-    SelectedItem = "2";
+    SelectedItem = 1;
     TileCatagory = 100;
     ItemCatagory = 0;
     MouseX = 0;
@@ -91,6 +93,7 @@ local graphics = require("loaders.graphics")
 local menu = require("loaders.menu")
 local threads = require("loaders.threading")
 local tools = require("loaders.toolhandler")
+local items = require("loaders.items")
 local decoding = require("loaders.decode")
 local DIR = tostring(io.popen("CD"):read())
 
@@ -175,6 +178,16 @@ end
 function love.mousereleased(mx,my,b)
     ToolSettings.MouseDown = false
     tools:MouseUp(b)
+    --OnUp event
+    for i = #graphics.FramesOnZ,1,-1 do
+        local frame = graphics.FramesOnZ[i]
+        if frame then
+            if frame.Visible and frame.Collision.IsDown and frame.Collision.OnUp then
+                frame.Collision.IsDown = false
+                frame.Collision.OnUp(mx, my, b)
+            end
+        end
+    end
 end
 
 function love.mousepressed(mx,my,b)
@@ -191,6 +204,7 @@ function love.mousepressed(mx,my,b)
         if frame then
             if frame.Visible and frame.Collision.OnClick then
                 if frame:CheckCollision(mx,my) then
+                    frame.Collision.IsDown = true
                     frame.Collision.OnClick(mx,my,b)
                     break
                 end
@@ -220,6 +234,7 @@ end
 
 function love.mousemoved(mx,my)
     ToolSettings.MouseX, ToolSettings.MouseY = mx, my
+    items:OnMove(mx, my) --update the items library
     --frame collision detection
     local oldFrames = {}
     local block = false
@@ -262,6 +277,14 @@ function love.textinput(key)
     elseif key == "=" then
         CameraPosition.Z = math.min(CameraPosition.Z + .2,2)
     end
+end
+
+function love.keypressed(key)
+    tools:OnKeyPress(key) --update the tools library
+end
+
+function love.keyreleased(key)
+    tools:OnKeyRelease(key) --update the tools library
 end
 
 function love.update(dt)

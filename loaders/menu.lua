@@ -293,19 +293,20 @@ function mod:GenerateTools(tileTools)
         end
         mod.ItemTools.MoveDown.Visible = true
         --tiles only
-        mod.ItemTools.Main = graphics:NewFrame(
+        mod.ItemTools.Move = graphics:NewFrame(
             LD.Settings.ToolHolder.X+44,LD.Settings.ToolHolder.Y+LD.Settings.ToolHolder.SizeY-106,
             32,32,
             2,"Menu"
         )
-        mod.ItemTools.Main:SetImage(Textures.MenuTextures.itemPlace)
-        mod.ItemTools.Main.ApplyZoom = false
-        mod.ItemTools.Main.ScreenPosition = true
-        mod.ItemTools.Main.Collision.DetectHover = true
-        mod.ItemTools.Main.Collision.OnClick = function()
-            
+        mod.ItemTools.Move:SetImage(Textures.MenuTextures.itemPlace)
+        mod.ItemTools.Move.ApplyZoom = false
+        mod.ItemTools.Move.ScreenPosition = true
+        mod.ItemTools.Move.Collision.DetectHover = true
+        mod.ItemTools.Move.Collision.OnClick = function()
+            ToolSettings.EraserMode = false
+            ToolSettings.ItemTool = "move"
         end
-        mod.ItemTools.Main.Visible = true
+        mod.ItemTools.Move.Visible = true
         mod.ItemTools.Eraser = graphics:NewFrame(
             LD.Settings.ToolHolder.X+78,LD.Settings.ToolHolder.Y+LD.Settings.ToolHolder.SizeY-106,
             32,32,
@@ -316,7 +317,7 @@ function mod:GenerateTools(tileTools)
         mod.ItemTools.Eraser.ScreenPosition = true
         mod.ItemTools.Eraser.Collision.DetectHover = true
         mod.ItemTools.Eraser.Collision.OnClick = function()
-            
+            ToolSettings.EraserMode = true
         end
         mod.ItemTools.Eraser.Visible = true
     end
@@ -443,6 +444,7 @@ function mod:GenerateIcons(tileIcons)
                 icon.Collision.OnClick = function()
                     ToolSettings.EraserMode = false
                     ToolSettings.SelectedItem = id
+                    ToolSettings.ItemTool = "normal"
                 end
                 icon.Visible = true
                 mod.Icons[i] = icon

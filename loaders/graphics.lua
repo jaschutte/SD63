@@ -156,11 +156,13 @@ function mod:NewFrame(x,y,w,h,z,layer)
     obj.FitImageInsideWH = false
     obj.Collision = {
         OnClick = nil; --when the user presses the frame
+        OnUp = nil; --when the mouse is up
         OnScroll = nil; --when the user scroll above the frame
         DetectHover = false; --want to check for hover?
         OnEnter = mod.DefaultOnEnter; --when mouse enters frame
         OnLeave = mod.DefaultOnLeave; --when mouse exits frame
         IsBeingHovered = false; --boolean to check if mouse is being hovered above frame
+        IsDown = false;
     }
     obj.Visible = false
     obj.ApplyZoom = true

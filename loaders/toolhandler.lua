@@ -3,6 +3,7 @@ local multiTileStats = require("loaders.stats.multiTiles")
 multiTileStats:Init()
 local graphics = require("loaders.graphics")
 local menu = require("loaders.menu")
+local items = require("loaders.items")
 local mod = {}
 mod.Recording = false
 mod.REC = {}
@@ -236,15 +237,7 @@ end
 function mod:PlaceItem(id, x, y)
     if Textures.ItemTextures[id] then
         local wX, wY = x - CameraPosition.X, y - CameraPosition.Y
-        local item = {}
-        item.ItemId = id
-        item.Frame = graphics:NewFrame(wX, wY, nil, nil, 5, "Menu")
-        item.Frame:SetImage(Textures.ItemTextures[id])
-        item.Frame:Resize(item.Frame.ImageData.W, item.Frame.ImageData.H)
-        --item.ScreenPosition = true
-        item.Frame.Visible = true
-        item.Id = GetId()
-        return item
+        items:New(id, wX, wY)
     else
         print("Game used INVALID ITEM! It was ineffective..")
     end
@@ -347,8 +340,14 @@ function mod:MouseDown(b)
                     end
                 end
             end
-        elseif not ToolSettings.UIBlockingMouse then
-            mod:PlaceItem(ToolSettings.SelectedItem, ToolSettings.MouseX, ToolSettings.MouseY)
+        elseif ToolSettings.CurrentDisplay == "Items" and not ToolSettings.UIBlockingMouse then
+            if ToolSettings.ItemTool == "normal" then
+                if ToolSettings.EraserMode then
+
+                else
+                    mod:PlaceItem(ToolSettings.SelectedItem, ToolSettings.MouseX, ToolSettings.MouseY)
+                end
+            end
         end
     end
     mod.REC = {}
@@ -394,6 +393,21 @@ function mod:MouseUp(b)
     end
     mod.Recording = false
     --mod.REC
+end
+
+function mod:OnKeyPress(key)
+    if ToolSettings.CurrentDisplay == "Items" and key == "lctrl" then
+        ToolSettings.CtrlDown = true
+        ToolSettings.RememberTileTool = ToolSettings.ItemTool
+        ToolSettings.ItemTool = "normal"
+    end
+end
+
+function mod:OnKeyRelease(key)
+    if ToolSettings.CurrentDisplay == "Items" and key == "lctrl" then
+        ToolSettings.CtrlDown = false
+        ToolSettings.ItemTool = ToolSettings.RememberTileTool
+    end
 end
 
 return mod
