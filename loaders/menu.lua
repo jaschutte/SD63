@@ -298,12 +298,13 @@ function mod:GenerateTools(tileTools)
             32,32,
             2,"Menu"
         )
-        mod.ItemTools.Move:SetImage(Textures.MenuTextures.itemPlace)
+        mod.ItemTools.Move:SetImage(Textures.HUDTextures.genericMove)
         mod.ItemTools.Move.ApplyZoom = false
         mod.ItemTools.Move.ScreenPosition = true
         mod.ItemTools.Move.Collision.DetectHover = true
         mod.ItemTools.Move.Collision.OnClick = function()
             ToolSettings.EraserMode = false
+            ToolSettings.RememberTileTool = ToolSettings.ItemTool
             ToolSettings.ItemTool = "move"
         end
         mod.ItemTools.Move.Visible = true
@@ -444,7 +445,9 @@ function mod:GenerateIcons(tileIcons)
                 icon.Collision.OnClick = function()
                     ToolSettings.EraserMode = false
                     ToolSettings.SelectedItem = id
-                    ToolSettings.ItemTool = "normal"
+                    if not ToolSettings.CtrlDown then
+                        ToolSettings.ItemTool = "normal"
+                    end
                 end
                 icon.Visible = true
                 mod.Icons[i] = icon

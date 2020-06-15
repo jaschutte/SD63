@@ -396,17 +396,27 @@ function mod:MouseUp(b)
 end
 
 function mod:OnKeyPress(key)
-    if ToolSettings.CurrentDisplay == "Items" and key == "lctrl" then
+    if key == "lshift" then
+        ToolSettings.ShiftDown = true
+    end
+    if key == "lctrl" then
         ToolSettings.CtrlDown = true
-        ToolSettings.RememberTileTool = ToolSettings.ItemTool
-        ToolSettings.ItemTool = "normal"
+        if ToolSettings.CurrentDisplay == "Items" then
+            ToolSettings.RememberTileTool = ToolSettings.ItemTool
+            ToolSettings.ItemTool = "normal"
+        end
     end
 end
 
 function mod:OnKeyRelease(key)
-    if ToolSettings.CurrentDisplay == "Items" and key == "lctrl" then
+    if key == "lshift" then
+        ToolSettings.ShiftDown = false
+    end
+    if key == "lctrl" then
         ToolSettings.CtrlDown = false
-        ToolSettings.ItemTool = ToolSettings.RememberTileTool
+        if ToolSettings.CurrentDisplay == "Items" then
+            ToolSettings.ItemTool = ToolSettings.RememberTileTool
+        end
     end
 end
 

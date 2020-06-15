@@ -36,7 +36,7 @@ end
 function mod:GetStats(item)
     --39 & 40 [4][5] = X, Y
     local stats = {
-        Stats = {item.ItemId, item.X, item.Y};
+        Stats = {item.ItemId, item.Frame.X, item.Frame.Y};
         Desc = {"Item Id", "X", "Y"};
     }
     local special = self.SpecialStats[tostring(item.ItemId)]
@@ -46,8 +46,8 @@ function mod:GetStats(item)
             stats.Desc[i+3] = special.Desc[i]
         end
         if item.ItemId == 39 or item.ItemId == 40 then
-            stats.Stats[4] = item.X
-            stats.Stats[5] = item.Y
+            stats.Stats[4] = item.Frame.X
+            stats.Stats[5] = item.Frame.Y
         end
     end
     stats.Dict = {}
@@ -62,7 +62,11 @@ function mod:GetStats(item)
     return stats
 end
 
-function mod:New(id, x, y) --create new items
+function mod:New(id, x, y) --create new
+    if ToolSettings.ShiftDown then
+        x = math.floor(x/ToolSettings.ItemGrid.X+0.5)*ToolSettings.ItemGrid.X
+        y = math.floor(y/ToolSettings.ItemGrid.Y+0.5)*ToolSettings.ItemGrid.Y
+    end
     local item = {}
     item.ItemId = id
     item.Frame = graphics:NewFrame(x, y, nil, nil, 5, "Menu") --create the frame for the item (including img)
@@ -106,6 +110,10 @@ function mod:OnMove(mx, my)
     if ToolSettings.ItemTool == "move" and ToolSettings.CurrentDisplay == "Items" then
         for _,item in pairs(LD.Level.Items) do
             if item.IsBeingDragged then
+                if ToolSettings.ShiftDown then
+                    mx = math.floor(mx/ToolSettings.ItemGrid.X+0.5)*ToolSettings.ItemGrid.X
+                    my = math.floor(my/ToolSettings.ItemGrid.Y+0.5)*ToolSettings.ItemGrid.Y
+                end
                 item:Move(mx, my)
             end
         end
