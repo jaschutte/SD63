@@ -256,7 +256,9 @@ function love.mousemoved(mx,my)
                 if frame:CheckCollision(mx,my) then
                     frame.Collision.IsBeingHovered = true
                     if not oldFrames[frame.Id] then
-                        frame.Collision.OnEnter(frame,mx,my)
+                        if frame.Collision.OnEnter then
+                            frame.Collision.OnEnter(frame,mx,my)
+                        end
                         block = true --check if ui is blocking tile grid
                     end
                     break
@@ -267,8 +269,10 @@ function love.mousemoved(mx,my)
         end
     end
     for _,frame in pairs(oldFrames) do
-        if frame.Collision.OnLeave and not frame.Collision.IsBeingHovered then
-            frame.Collision.OnLeave(frame,mx,my)
+        if not frame.Collision.IsBeingHovered then
+            if frame.Collision.OnLeave then
+                frame.Collision.OnLeave(frame,mx,my)
+            end
             ToolSettings.UIBlockingMouse = false
         end
     end

@@ -112,7 +112,7 @@ function mod:MassDelete(delete) --only loops FramesOnZ once for the entire list 
     return nil
 end
 
-function mod:NewFrame(x,y,w,h,z,layer)
+function mod:NewFrame(x,y,w,h,z,layer,ax,ay)
     local obj = {}
     obj.X = x or 0
     obj.Y = y or 0
@@ -121,8 +121,8 @@ function mod:NewFrame(x,y,w,h,z,layer)
     obj.Z = z or 0
     obj.Layer = layer or "b"
     obj.R = 0
-    obj.AnchorX = 0.5
-    obj.AnchorY = 0.5
+    obj.AnchorX = ax or 0.5
+    obj.AnchorY = ay or 0.5
     obj.ScaleX = 1; -- ONLY SCALES WHEN DRAWN, DOES NOT SCALE COLLISION
     obj.ScaleY = 1; -- ONLY SCALES WHEN DRAWN, DOES NOT SCALE COLLISION
     obj.Colour = {

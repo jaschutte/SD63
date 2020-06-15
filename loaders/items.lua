@@ -1,5 +1,6 @@
 
 local graphics = require("loaders.graphics")
+local window = require("loaders.window")
 
 local mod = {}
 
@@ -74,11 +75,19 @@ function mod:New(id, x, y) --create new
     item.Frame:Resize(item.Frame.ImageData.W, item.Frame.ImageData.H)
     item.Frame.Visible = true
     item.IsBeingDragged = false
+    item._LastPressed = os.clock()
     item.Frame.Collision.OnClick = function() --onclick behaviour (todo: add double click)
         item.IsBeingDragged = true
+        local now = os.clock()
+        if now-item._LastPressed ~= 0 and now-item._LastPressed <= 0.3 then --0.3 is the max time between the double click
+            --open tab
+            window:NewWindow(ToolSettings.MouseX, ToolSettings.MouseY)
+            print("double click!")
+        end
+        item._LastPressed = now
     end
     item.Frame.Collision.OnUp = function()
-       item.IsBeingDragged = false
+        item.IsBeingDragged = false
     end
     item.Stats = mod:GetStats(item)
     if not item.Stats then
