@@ -100,6 +100,7 @@ local threads = require("loaders.threading")
 local tools = require("loaders.toolhandler")
 local items = require("loaders.items")
 local decoding = require("loaders.decode")
+local windows = require("loaders.window")
 local DIR = tostring(io.popen("CD"):read())
 
 function love.load()
@@ -183,6 +184,7 @@ end
 function love.mousereleased(mx,my,b)
     ToolSettings.MouseDown = false
     tools:MouseUp(b)
+    windows:MouseUp(b)
     --OnUp event
     for i = #graphics.FramesOnZ,1,-1 do
         local frame = graphics.FramesOnZ[i]
@@ -240,6 +242,7 @@ end
 function love.mousemoved(mx,my)
     ToolSettings.MouseX, ToolSettings.MouseY = mx, my
     items:OnMove(mx, my) --update the items library
+    windows:OnMove(mx, my) --update the window libaray
     --frame collision detection
     local oldFrames = {}
     local block = false

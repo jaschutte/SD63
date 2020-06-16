@@ -96,6 +96,9 @@ end
 function mod:MassDelete(delete) --only loops FramesOnZ once for the entire list of deletion. Should be used if more than 3 objects need to be deleted
     local rev = {}
     for _,frame in pairs(delete) do
+        for _,func in pairs(frame.AponDeletion) do --invoke the deletion method
+            func(frame)
+        end
         mod.Frames[frame.Id] = nil
         rev[frame.Id] = true
     end
@@ -167,6 +170,7 @@ function mod:NewFrame(x,y,w,h,z,layer,ax,ay)
     obj.Visible = false
     obj.ApplyZoom = true
     obj.ScreenPosition = false --if false it will use CameraPosition
+    obj.AponDeletion = {} --invokes when this frame is being deleted, USE GETID() AS A KEY!!
     function obj:SetColours(r,g,b,a,forBackground)
         if forBackground then
             obj.BackgroundColour.R = r or obj.BackgroundColour.R
@@ -198,7 +202,7 @@ function mod:NewFrame(x,y,w,h,z,layer,ax,ay)
             obj.ImageData.ScaleX, obj.ImageData.ScaleY = obj.W/obj.ImageData.W, obj.H/obj.ImageData.H
         end
     end
-    function obj:ChangeZ(z,layer)
+    function obj:ChangeZ(z, layer)
         obj.Z = z or obj.Z
         obj.Layer = layer or obj.Layer
         removeFrame(obj)
@@ -213,6 +217,9 @@ function mod:NewFrame(x,y,w,h,z,layer,ax,ay)
         obj:Move(floor(x*32),floor(y*32))
     end
     function obj:Destroy()
+        for _,func in pairs(obj.AponDeletion) do --invoke the deletion method
+            func(obj)
+        end
         removeFrame(obj)
         mod.Frames[obj.Id] = nil
         return nil
