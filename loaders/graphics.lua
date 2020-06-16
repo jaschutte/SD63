@@ -17,6 +17,47 @@ local function sign(x,f) --get the sign of an number. Option to replace 0 with f
     return x == 0 and (f or 0) or x < 0 and -1 or 1
 end
 
+local function drawFunc(obj)
+    if obj.Visible then
+        love.graphics.setColor(obj.Colour.R,obj.Colour.G,obj.Colour.B,obj.Colour.A)
+        local x,y, w,h = obj:ToScreenPixels(true)
+        if obj.Clips.W ~= 0 and obj.Clips.H ~= 0 then --clips ignore zoom
+            local x, y = obj.Clips.X-obj.Clips.W*obj.Clips.AnchorX, obj.Clips.Y-obj.Clips.H*obj.Clips.AnchorY
+            if not obj.ScreenPosition then
+                x, y = x - CameraPosition.X, y - CameraPosition.Y
+            end
+            love.graphics.setScissor(x,y,obj.Clips.W,obj.Clips.H)
+        end
+        if obj.ImageData.Image then
+            local sx = obj.ApplyZoom and obj.ScaleX*CameraPosition.Z or obj.ScaleX
+            local sy = obj.ApplyZoom and obj.ScaleY*CameraPosition.Z or obj.ScaleY
+            if obj.KeepBackground then
+                love.graphics.setColor(obj.BackgroundColour.R,obj.BackgroundColour.G,obj.BackgroundColour.B,obj.BackgroundColour.A)
+                local x,y,w,h = obj:ToScreenPixels(false,true)
+                love.graphics.rectangle("fill",x,y,w,h)
+                love.graphics.setColor(obj.Colour.R,obj.Colour.G,obj.Colour.B,obj.Colour.A)
+            end
+            if obj.FitImageInsideWH then
+                love.graphics.draw(
+                    obj.ImageData.Image, x,y,obj.R,
+                    sx*obj.ImageData.ScaleX, sy*obj.ImageData.ScaleY,
+                    w*obj.AnchorX/obj.ImageData.ScaleX, h*obj.AnchorY/obj.ImageData.ScaleY
+                )
+            else
+                love.graphics.draw(
+                    obj.ImageData.Image, x,y,obj.R,
+                    sx,sy,
+                    w*obj.AnchorX/obj.ImageData.ScaleX, h*obj.AnchorY/obj.ImageData.ScaleY
+                )
+            end
+        else
+            local x,y,w,h = obj:ToScreenPixels(false,true)
+            love.graphics.rectangle("fill",x,y,w,h)
+        end
+        love.graphics.setScissor()
+    end
+end
+
 local function insertFrame(fr)
     local placed = false
     local temp = {}
@@ -246,47 +287,32 @@ function mod:NewFrame(x,y,w,h,z,layer,ax,ay)
         return floor(x),floor(y), floor(w),floor(h)
     end
     function obj:Draw()
-        if obj.Visible then
-            love.graphics.setColor(obj.Colour.R,obj.Colour.G,obj.Colour.B,obj.Colour.A)
-            local x,y, w,h = obj:ToScreenPixels(true)
-            if obj.Clips.W ~= 0 and obj.Clips.H ~= 0 then --clips ignore zoom
-                local x, y = obj.Clips.X-obj.Clips.W*obj.Clips.AnchorX, obj.Clips.Y-obj.Clips.H*obj.Clips.AnchorY
-                if not obj.ScreenPosition then
-                    x, y = x - CameraPosition.X, y - CameraPosition.Y
-                end
-                love.graphics.setScissor(x,y,obj.Clips.W,obj.Clips.H)
-            end
-            if obj.ImageData.Image then
-                local sx = obj.ApplyZoom and obj.ScaleX*CameraPosition.Z or obj.ScaleX
-                local sy = obj.ApplyZoom and obj.ScaleY*CameraPosition.Z or obj.ScaleY
-                if obj.KeepBackground then
-                    love.graphics.setColor(obj.BackgroundColour.R,obj.BackgroundColour.G,obj.BackgroundColour.B,obj.BackgroundColour.A)
-                    local x,y,w,h = obj:ToScreenPixels(false,true)
-                    love.graphics.rectangle("fill",x,y,w,h)
-                    love.graphics.setColor(obj.Colour.R,obj.Colour.G,obj.Colour.B,obj.Colour.A)
-                end
-                if obj.FitImageInsideWH then
-                    love.graphics.draw(
-                        obj.ImageData.Image, x,y,obj.R,
-                        sx*obj.ImageData.ScaleX, sy*obj.ImageData.ScaleY,
-                        w*obj.AnchorX/obj.ImageData.ScaleX, h*obj.AnchorY/obj.ImageData.ScaleY
-                    )
-                else
-                    love.graphics.draw(
-                        obj.ImageData.Image, x,y,obj.R,
-                        sx,sy,
-                        w*obj.AnchorX/obj.ImageData.ScaleX, h*obj.AnchorY/obj.ImageData.ScaleY
-                    )
-                end
-            else
-                local x,y,w,h = obj:ToScreenPixels(false,true)
-                love.graphics.rectangle("fill",x,y,w,h)
-            end
-            love.graphics.setScissor()
-        end
+        drawFunc(obj)
     end
     mod.Frames[obj.Id] = obj
     insertFrame(obj)
+    return obj
+end
+
+function mod:NewText(x,y,w,h,z,layer,ax,ay)
+    local obj = self:NewFrame(x,y,w,h,z,layer,ax,ay)
+    obj.Text = "Hello, World!"
+    obj.FontColour = {R = 0, G = 0, B = 0, A = 1}
+    obj.Font = Fonts.FontObjs.InconsolataMedium[12]
+    function obj:SetFont(name, size)
+        if Fonts.FontObjs[name] then
+            size = clamp(size - size%Fonts.FontIncrement, Fonts.FontMin, Fonts.FontMax)
+            obj.Font = Fonts.FontObjs[name][size]
+        else
+            print("Sorry, but we don't allow blackmarket fonts here. Come back once you got the legal stuff!")
+        end
+    end
+    function obj:Draw()
+        drawFunc(obj)
+        love.graphics.setColor(obj.FontColour.R, obj.FontColour.B, obj.FontColour.G, obj.FontColour.A)
+        love.graphics.setFont(obj.Font)
+        love.graphics.print(obj.Text, obj.X, obj.Y)
+    end
     return obj
 end
 

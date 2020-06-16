@@ -94,6 +94,21 @@ _G.LD = {
     };
 }
 
+_G.Fonts = {
+    FontIncrement = 2;
+    FontMin = 10;
+    FontMax = 50;
+    FontNames = {
+        "Inconsolata-ExtraLight";
+        "Inconsolata-Light";
+        "Inconsolata-Medium";
+        "Inconsolata-Regular";
+        "Inconsolata-SemiBold";
+    };
+    FontObjs = {};
+    Fallback = love.graphics.newFont(12);
+}
+
 local graphics = require("loaders.graphics")
 local menu = require("loaders.menu")
 local threads = require("loaders.threading")
@@ -160,6 +175,14 @@ function love.load()
     local dir = "textures/themes/tiles"
     for _,texture in pairs(love.filesystem.getDirectoryItems(dir)) do
         Textures.MenuTextures["THEME/TILES/"..texture:sub(1,-5)] = love.graphics.newImage(dir.."/"..texture)
+    end
+    --load font
+    for _,name in pairs(Fonts.FontNames) do
+        local sub = name:gsub("-","")
+        Fonts.FontObjs[sub] = {}
+        for i = Fonts.FontMin, Fonts.FontMax, Fonts.FontIncrement do
+            Fonts.FontObjs[sub][i] = love.graphics.newFont("fonts/"..name..".ttf", i)
+        end
     end
     --setup default Level
     for x = 1,50 do
@@ -326,6 +349,7 @@ function love.draw()
     for _,frame in ipairs(graphics.FramesOnZ) do
         frame:Draw()
     end
+    love.graphics.setFont(Fonts.Fallback)
     graphics:DrawMessages()
     --display framerate
     --love.graphics.print("FPS: "..love.timer.getFPS(),5,WindowY-20)

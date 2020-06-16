@@ -57,6 +57,11 @@ function mod:NewWindow(x, y, w, h) --honestly this is just placing frames togeth
     end
     function window:Close()
         graphics:MassDelete(self.Tabs)
+        local att = {}
+        for id,frame in pairs(self.Attached) do
+            att[id] = frame[1]
+        end
+        graphics:MassDelete(att)
         mod.Windows[self.Id] = nil
     end
     function window:Move(x, y) --invoke when moving the window, also updates attached frames

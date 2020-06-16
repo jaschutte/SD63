@@ -83,7 +83,7 @@ function mod:New(id, x, y) --create new
             if now-item._LastPressed ~= 0 and now-item._LastPressed <= 0.3 then --0.3 is the max time between the double click
                 --open tab
                 local window = windows:NewWindow(ToolSettings.MouseX, ToolSettings.MouseY)
-                local frame = graphics:NewFrame(0, 0, 100, 50)
+                local frame = graphics:NewText(0, 0, 100, 50)
                 frame:SetColours(1, 0, 0)
                 frame.AnchorX, frame.AnchorY = 0, 0
                 window:Attach(frame, 0, 16, 2)
