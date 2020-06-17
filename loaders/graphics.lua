@@ -34,7 +34,7 @@ local function drawFunc(obj)
             if obj.KeepBackground then
                 love.graphics.setColor(obj.BackgroundColour.R,obj.BackgroundColour.G,obj.BackgroundColour.B,obj.BackgroundColour.A)
                 local x,y,w,h = obj:ToScreenPixels(false,true)
-                love.graphics.rectangle("fill",x,y,w,h)
+                love.graphics.rectangle("fill",x,y,obj.ApplyZoom and w*CameraPosition.Z or w, obj.ApplyZoom and h*CameraPosition.Z or h)
                 love.graphics.setColor(obj.Colour.R,obj.Colour.G,obj.Colour.B,obj.Colour.A)
             end
             if obj.FitImageInsideWH then
@@ -52,7 +52,7 @@ local function drawFunc(obj)
             end
         else
             local x,y,w,h = obj:ToScreenPixels(false,true)
-            love.graphics.rectangle("fill",x,y,w,h)
+            love.graphics.rectangle("fill",x,y,obj.ApplyZoom and w*CameraPosition.Z or w, obj.ApplyZoom and h*CameraPosition.Z or h)
         end
         love.graphics.setScissor()
     end
@@ -317,7 +317,7 @@ function mod:NewText(x,y,w,h,z,layer,ax,ay)
 end
 
 function mod:ScreenToWorld(x, y)
-    return CameraPosition.X - x / CameraPosition.Z, CameraPosition.Y - y / CameraPosition.Z
+    return (-CameraPosition.X + x) / CameraPosition.Z, (-CameraPosition.Y + y) / CameraPosition.Z
 end
 
 function mod:TileToScreen(x,y) --convert tile units to screen units

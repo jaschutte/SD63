@@ -75,10 +75,12 @@ function mod:New(id, x, y) --create new
     item.Frame:Resize(item.Frame.ImageData.W, item.Frame.ImageData.H)
     item.Frame.Visible = true
     item.IsBeingDragged = false
+    item.LastLocation = {X = 0, Y = 0}
     item._LastPressed = os.clock()
-    item.Frame.Collision.OnClick = function() --onclick behaviour (todo: add double click)
+    item.Frame.Collision.OnClick = function(mx, my) --onclick behaviour (todo: add double click)
         if ToolSettings.CurrentDisplay == "Items" then
             item.IsBeingDragged = true
+            item.LastLocation.X, item.LastLocation.Y = item.Frame.X - mx, item.Frame.Y - my
             local now = os.clock()
             if now-item._LastPressed ~= 0 and now-item._LastPressed <= 0.3 then --0.3 is the max time between the double click
                 --open tab
@@ -124,11 +126,15 @@ function mod:OnMove(mx, my)
     if ToolSettings.ItemTool == "move" and ToolSettings.CurrentDisplay == "Items" then
         for _,item in pairs(LD.Level.Items) do
             if item.IsBeingDragged then
+                local x, y = graphics:ScreenToWorld(mx, my)
+                print(x, y)
+                --[[local dx, dy = item.LastLocation.X + x, item.LastLocation.Y + y
+                local fx, fy = dx, dy
                 if ToolSettings.ShiftDown then
-                    mx = math.floor(mx/ToolSettings.ItemGrid.X+0.5)*ToolSettings.ItemGrid.X
-                    my = math.floor(my/ToolSettings.ItemGrid.Y+0.5)*ToolSettings.ItemGrid.Y
+                    fx = math.floor(dx/ToolSettings.ItemGrid.X+0.5)*ToolSettings.ItemGrid.X
+                    fy = math.floor(dy/ToolSettings.ItemGrid.Y+0.5)*ToolSettings.ItemGrid.Y
                 end
-                item:Move(mx, my)
+                item:Move(fx, fy)--]]
             end
         end
     end

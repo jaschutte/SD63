@@ -23,12 +23,13 @@ function mod:GenerateHUD(x,y,tile)
     if ToolSettings.TileRange.EndY < ToolSettings.TileRange.StartY then
         y = y - 82
     end
+    x, y = graphics:ScreenToWorld(x, y)
     mod.HUD.Background = graphics:NewFrame(x,y,172,36,3,"Menu")
     mod.HUD.Background.AnchorX, mod.HUD.Background.AnchorY = 0, 0
     mod.HUD.Background:SetColours(.11,.11,.11)
     mod.HUD.Background.Collision.DetectHover = true
-    mod.HUD.Background.Collision.OnEnter = function() end
-    mod.HUD.Background.Collision.OnLeave = function() end
+    mod.HUD.Background.Collision.OnEnter = nil
+    mod.HUD.Background.Collision.OnLeave = nil
     mod.HUD.Background.Visible = true
     mod.HUD.Close = graphics:NewFrame(x+18,y+18,32,32,4,"Menu")
     mod.HUD.Close:SetImage(Textures.HUDTextures.genericClose)
