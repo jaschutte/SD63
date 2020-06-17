@@ -8,6 +8,8 @@ mod.FramesOnZ = {}
 mod.Messages = {}
 mod.DrawHoverTile = false
 mod.DrawTileSelection = false
+mod.TotalFrames = 0
+mod._RECALC_ON_SCRN_EVERY = 20
 
 local function clamp(x,y,z) --limit x between y and z
     return (x > y and x or y) < z and (x > y and x or y) or z
@@ -97,6 +99,7 @@ local function insertFrame(fr)
     for id,frame in pairs(temp) do
         mod.FramesOnZ[id] = frame
     end
+    mod.TotalFrames = #mod.FramesOnZ
 end
 
 local function removeFrame(fr)
@@ -111,6 +114,7 @@ local function removeFrame(fr)
             found = true
         end
     end
+    mod.TotalFrames = #mod.FramesOnZ
 end
 
 function mod.DefaultOnEnter(self)
@@ -153,7 +157,7 @@ function mod:MassDelete(delete) --only loops FramesOnZ once for the entire list 
             mod.FramesOnZ[key] = nil
         end
     end
-    return nil
+    mod.TotalFrames = #mod.FramesOnZ
 end
 
 function mod:NewFrame(x,y,w,h,z,layer,ax,ay)
@@ -209,6 +213,7 @@ function mod:NewFrame(x,y,w,h,z,layer,ax,ay)
         IsDown = false;
     }
     obj.Visible = false
+    obj.OnScreen = true
     obj.ApplyZoom = true
     obj.ScreenPosition = false --if false it will use CameraPosition
     obj.AponDeletion = {} --invokes when this frame is being deleted, USE GETID() AS A KEY!!

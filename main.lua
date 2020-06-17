@@ -193,6 +193,9 @@ function love.load()
     end
     LD.Level.Size = {X = 50, Y = 30}
     menu:InitMenu()
+    for i = 1,5000 do
+        items:New(math.random(1,30), math.random(0, 1280), math.random(0, 1280))
+    end
 end
 
 function love.resize(sx,sy)
@@ -264,7 +267,6 @@ end
 
 function love.mousemoved(mx,my)
     ToolSettings.MouseX, ToolSettings.MouseY = mx, my
-    items:OnMove(mx, my) --update the items library
     windows:OnMove(mx, my) --update the window libaray
     --frame collision detection
     local oldFrames = {}
@@ -322,8 +324,10 @@ function love.keyreleased(key)
     tools:OnKeyRelease(key) --update the tools library
 end
 
+local _FRAMES_UNTIL_RECACL = 0
 function love.update(dt)
     --camera
+    local cX, cY = CameraPosition.X, CameraPosition.Y
     local ch = 500*dt*LD.Settings.CameraSpeed
     if love.keyboard.isDown("w") or love.keyboard.isDown("up") then
         CameraPosition.Y = CameraPosition.Y + ch
@@ -337,7 +341,29 @@ function love.update(dt)
     if love.keyboard.isDown("d") or love.keyboard.isDown("right") then
         CameraPosition.X = CameraPosition.X - ch
     end
+    --update frames if camera moved
+    _FRAMES_UNTIL_RECACL = _FRAMES_UNTIL_RECACL + 1
+    if _FRAMES_UNTIL_RECACL >= graphics._RECALC_ON_SCRN_EVERY then
+        _FRAMES_UNTIL_RECACL = 0
+        if CameraPosition.X ~= cX or CameraPosition.y ~= cY then
+            local tX, tY = graphics:ScreenToWorld(0, 0)
+            local bX, bY = graphics:ScreenToWorld(WindowX, WindowY)
+            for _,frame in ipairs(graphics.FramesOnZ) do
+                if not frame.OnScreen then
+                    if frame.ScreenPosition then
+                        frame.OnScreen = true
+                    elseif frame.Layer == "Menu" then
+                        frame.OnScreen = true
+                    end
+                end
+                if not frame.ScreenPosition and frame.Layer ~= "Menu" then
+                    frame.OnScreen = frame.X+frame.W*frame.AnchorX >= tX and frame.X-frame.W*frame.AnchorX <= bX and frame.Y+frame.H*frame.AnchorY >= tY and frame.Y-frame.H*frame.AnchorY <= bY
+                end
+            end
+        end
+    end
     --update modules
+    items:Update()
     tools:Update()
     graphics:UpdateMessages(dt)
     threads:OnFrame()
@@ -347,10 +373,13 @@ function love.draw()
     graphics:DrawTiles()
     graphics:DrawHovers()
     for _,frame in ipairs(graphics.FramesOnZ) do
-        frame:Draw()
+        if frame.OnScreen and frame.Visible then
+            frame:Draw()
+        end
     end
     love.graphics.setFont(Fonts.Fallback)
     graphics:DrawMessages()
     --display framerate
-    --love.graphics.print("FPS: "..love.timer.getFPS(),5,WindowY-20)
+    love.graphics.setColor(1,1,1)
+    love.graphics.print("FPS: "..love.timer.getFPS(),5,WindowY-20)
 end

@@ -236,8 +236,9 @@ end
 
 function mod:PlaceItem(id, x, y)
     if Textures.ItemTextures[id] then
-        local wX, wY = x - CameraPosition.X, y - CameraPosition.Y
-        items:New(id, wX / CameraPosition.Z, wY / CameraPosition.Z)
+        --local wX, wY = x - CameraPosition.X, y - CameraPosition.Y
+        --items:New(id, wX / CameraPosition.Z, wY / CameraPosition.Z)
+        items:New(id, graphics:ScreenToWorld(x, y))
     else
         print("Game used INVALID ITEM! It was ineffective..")
     end

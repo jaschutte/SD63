@@ -70,7 +70,7 @@ function mod:New(id, x, y) --create new
     end
     local item = {}
     item.ItemId = id
-    item.Frame = graphics:NewFrame(x, y, nil, nil, 5, "Menu") --create the frame for the item (including img)
+    item.Frame = graphics:NewFrame(x, y) --create the frame for the item (including img)
     item.Frame:SetImage(Textures.ItemTextures[id])
     item.Frame:Resize(item.Frame.ImageData.W, item.Frame.ImageData.H)
     item.Frame.Visible = true
@@ -80,6 +80,7 @@ function mod:New(id, x, y) --create new
     item.Frame.Collision.OnClick = function(mx, my) --onclick behaviour (todo: add double click)
         if ToolSettings.CurrentDisplay == "Items" then
             item.IsBeingDragged = true
+            mx, my = graphics:ScreenToWorld(mx, my)
             item.LastLocation.X, item.LastLocation.Y = item.Frame.X - mx, item.Frame.Y - my
             local now = os.clock()
             if now-item._LastPressed ~= 0 and now-item._LastPressed <= 0.3 then --0.3 is the max time between the double click
@@ -122,13 +123,13 @@ function mod:New(id, x, y) --create new
     return item
 end
 
-function mod:OnMove(mx, my)
+function mod:Update()
+    local mx, my = ToolSettings.MouseX, ToolSettings.MouseY
     if ToolSettings.ItemTool == "move" and ToolSettings.CurrentDisplay == "Items" then
         for _,item in pairs(LD.Level.Items) do
             if item.IsBeingDragged then
                 local x, y = graphics:ScreenToWorld(mx, my)
-                print(x, y)
-                --[[local dx, dy = item.LastLocation.X + x, item.LastLocation.Y + y
+                local dx, dy = item.LastLocation.X + x, item.LastLocation.Y + y
                 local fx, fy = dx, dy
                 if ToolSettings.ShiftDown then
                     fx = math.floor(dx/ToolSettings.ItemGrid.X+0.5)*ToolSettings.ItemGrid.X
