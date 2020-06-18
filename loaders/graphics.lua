@@ -19,7 +19,7 @@ local function sign(x,f) --get the sign of an number. Option to replace 0 with f
     return x == 0 and (f or 0) or x < 0 and -1 or 1
 end
 
-local function drawFunc(obj)
+local function drawFunc(obj) --scales images (maybe normal rects) incorrectly. sidenote: GOD THIS FUNCTION CAUSES SO MUCH PAIN
     if obj.Visible then
         love.graphics.setColor(obj.Colour.R,obj.Colour.G,obj.Colour.B,obj.Colour.A)
         local x,y, w,h = obj:ToScreenPixels(true)
@@ -282,17 +282,14 @@ function mod:NewFrame(x,y,w,h,z,layer,ax,ay)
             w, h = w*obj.ScaleX, h*obj.ScaleY
         end
         if obj.ApplyZoom then
-            --w, h = w*CameraPosition.Z, h*CameraPosition.Z
-            if not ignoreAnchors then
-                x, y = x*CameraPosition.Z-w*obj.AnchorX, y*CameraPosition.Z-h*obj.AnchorY
-            else
-                x, y = x*CameraPosition.Z, y*CameraPosition.Z
-            end
-        elseif not ignoreAnchors then
-            x, y = x-w*obj.AnchorX, y-h*obj.AnchorY
+            x, y = x * CameraPosition.Z, y * CameraPosition.Z
+            w, h = w * CameraPosition.Z, h * CameraPosition.Z
         end
         if not obj.ScreenPosition then
             x, y = x+CameraPosition.X, y+CameraPosition.Y
+        end
+        if not ignoreAnchors then
+            x, y = x-w*obj.AnchorX, y-h*obj.AnchorY
         end
         return floor(x),floor(y), floor(w),floor(h)
     end
@@ -324,6 +321,10 @@ function mod:NewText(x,y,w,h,z,layer,ax,ay)
         love.graphics.print(obj.Text, obj.X, obj.Y)
     end
     return obj
+end
+
+function mod:WorldToScreen(x, y)
+    return (CameraPosition.X + x)*CameraPosition.Z, (CameraPosition.Y + y)*CameraPosition.Z
 end
 
 function mod:ScreenToWorld(x, y)
