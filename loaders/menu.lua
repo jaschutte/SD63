@@ -17,39 +17,51 @@ end
 function mod:GenerateHUD(x,y,tile)
     graphics:MassDelete(mod.HUD)
     ToolSettings.TileRange.X, ToolSettings.TileRange.Y = 0, 0
+    x, y = graphics:ScreenToWorld(x, y)
     if ToolSettings.TileRange.EndX < ToolSettings.TileRange.StartX then
         x = x - 220
     end
     if ToolSettings.TileRange.EndY < ToolSettings.TileRange.StartY then
         y = y - 82
     end
-    x, y = graphics:ScreenToWorld(x, y)
+    x, y = x + 40, y + 40
+    local fr = graphics:NewFrame(x, y, 172, 36, 2, "Menu")
+    fr.AnchorX, fr.AnchorY = 0, 0
+    fr:SetColours(1,1,1,0.5)
+    fr.ScreenPosition = false
+    fr.Visible = true
     mod.HUD.Background = graphics:NewFrame(x,y,172,36,3,"Menu")
     mod.HUD.Background.AnchorX, mod.HUD.Background.AnchorY = 0, 0
     mod.HUD.Background:SetColours(.11,.11,.11)
     mod.HUD.Background.Collision.DetectHover = true
     mod.HUD.Background.Collision.OnEnter = nil
     mod.HUD.Background.Collision.OnLeave = nil
+    mod.HUD.Background.ScreenPosition = false
     mod.HUD.Background.Visible = true
     mod.HUD.Close = graphics:NewFrame(x+18,y+18,32,32,4,"Menu")
     mod.HUD.Close:SetImage(Textures.HUDTextures.genericClose)
     mod.HUD.Close.Collision.DetectHover = true
+    mod.HUD.Close.ScreenPosition = false
     mod.HUD.Close.Visible = true
     mod.HUD.Move = graphics:NewFrame(x+52,y+18,32,32,4,"Menu")
     mod.HUD.Move:SetImage(Textures.HUDTextures.genericMove)
     mod.HUD.Move.Collision.DetectHover = true
+    mod.HUD.Move.ScreenPosition = false
     mod.HUD.Move.Visible = true
     mod.HUD.Fill = graphics:NewFrame(x+86,y+18,32,32,4,"Menu")
     mod.HUD.Fill:SetImage(Textures.HUDTextures.genericFill)
     mod.HUD.Fill.Collision.DetectHover = true
+    mod.HUD.Fill.ScreenPosition = false
     mod.HUD.Fill.Visible = true
     mod.HUD.Save = graphics:NewFrame(x+120,y+18,32,32,4,"Menu")
     mod.HUD.Save:SetImage(Textures.HUDTextures.genericSave)
     mod.HUD.Save.Collision.DetectHover = true
+    mod.HUD.Save.ScreenPosition = false
     mod.HUD.Save.Visible = true
     mod.HUD.Delete = graphics:NewFrame(x+154,y+18,32,32,4,"Menu")
     mod.HUD.Delete:SetImage(Textures.HUDTextures.genericDelete)
     mod.HUD.Delete.Collision.DetectHover = true
+    mod.HUD.Delete.ScreenPosition = false
     mod.HUD.Delete.Visible = true
     mod.HUD.Close.Collision.OnClick = function()
         if tile then
@@ -78,7 +90,7 @@ function mod:GenerateHUD(x,y,tile)
         if tile then
             for x = ToolSettings.TileRange.StartX, ToolSettings.TileRange.EndX, sign(ToolSettings.TileRange.EndX-ToolSettings.TileRange.StartX,1) do
                 for y = ToolSettings.TileRange.StartY, ToolSettings.TileRange.EndY, sign(ToolSettings.TileRange.EndY-ToolSettings.TileRange.StartY,1) do
-                    _G:SetTile(x,y,"0")
+                    _G:SetTile(x, y, "0")
                 end
             end
             mod.TileTools.Area.Collision.OnClick()
@@ -574,6 +586,7 @@ function mod:InitMenu()
         graphics.DrawHoverTile = false
         graphics.DrawTileRangeBackground = false
         graphics.DrawTileSelection = false
+        --print("hmhm?")
         ToolSettings.TileRange.Stage = 1
         ToolSettings.CurrentDisplay = false
     end

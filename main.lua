@@ -193,9 +193,6 @@ function love.load()
     end
     LD.Level.Size = {X = 50, Y = 30}
     menu:InitMenu()
-    for i = 1,5000 do
-        items:New(math.random(1,30), math.random(0, 1280), math.random(0, 1280))
-    end
 end
 
 function love.resize(sx,sy)
@@ -344,7 +341,7 @@ function love.update(dt)
     --update frames if camera moved
     _FRAMES_UNTIL_RECACL = _FRAMES_UNTIL_RECACL + 1
     if _FRAMES_UNTIL_RECACL >= graphics._RECALC_ON_SCRN_EVERY then
-        _FRAMES_UNTIL_RECACL = 0
+        _FRAMES_UNTIL_RECACL = 0--]]
         if CameraPosition.X ~= cX or CameraPosition.y ~= cY then
             local tX, tY = graphics:ScreenToWorld(0, 0)
             local bX, bY = graphics:ScreenToWorld(WindowX, WindowY)

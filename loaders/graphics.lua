@@ -258,6 +258,11 @@ function mod:NewFrame(x,y,w,h,z,layer,ax,ay)
         x = x or obj.X
         y = y or obj.Y
         obj.X, obj.Y = x, y
+        if not obj.ScreenPosition and obj.Layer ~= "Menu" then
+            local tX, tY = mod:ScreenToWorld(0, 0)
+            local bX, bY = mod:ScreenToWorld(WindowX, WindowY)
+            obj.OnScreen = obj.X+obj.W*obj.AnchorX >= tX and obj.X-obj.W*obj.AnchorX <= bX and obj.Y+obj.H*obj.AnchorY >= tY and obj.Y-obj.H*obj.AnchorY <= bY
+        end
     end
     function obj:TileToItem(x,y)
         obj:Move(floor(x*32),floor(y*32))

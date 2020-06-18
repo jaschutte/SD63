@@ -304,9 +304,8 @@ function mod:MouseDown(b)
                 ToolSettings.TileRange.Stage = math.min(ToolSettings.TileRange.Stage+1,3)
                 if ToolSettings.TileRange.Stage == 3 then
                     local x, y = graphics:TileToScreen(ToolSettings.TileRange.EndX, ToolSettings.TileRange.EndY)
-                    print(x, y, ToolSettings.MouseX, ToolSettings.MouseY)
+                    --local x, y = graphics:ScreenToWorld(x, y)
                     menu:GenerateHUD(x, y, true)
-                    --menu:GenerateHUD(x+40-CameraPosition.X,y+40-CameraPosition.Y,true)
                     --menu:GenerateHUD(x-CameraPosition.X, y-CameraPosition.Y, true)
                 end
             end
@@ -315,7 +314,7 @@ function mod:MouseDown(b)
                     local x, y = graphics:ScreenToTile(ToolSettings.MouseX, ToolSettings.MouseY)
                     local tile = graphics:IsTilePositionValid(x,y)
                     if tile then
-                        mod:FloodRecursive(x, y, tile, ToolSettings.EraserMode and "0" or ToolSettings.SelectedTile)
+                        mod:FloodRecursive(x, y, tile, ToolSettings.EraserMode and "0" or ToolSettings.SelectedTile) --there's a bug with fill! Some tiles don't get filled at certain positions (only applies to pattern fill).
                     end
                 elseif type(ToolSettings.SelectedTile) == "table" then
                     local width = #ToolSettings.SelectedTile
