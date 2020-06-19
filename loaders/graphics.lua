@@ -19,48 +19,37 @@ local function sign(x,f) --get the sign of an number. Option to replace 0 with f
     return x == 0 and (f or 0) or x < 0 and -1 or 1
 end
 
-local function drawFunc(obj) --scales images (maybe normal rects) incorrectly. sidenote: GOD THIS FUNCTION CAUSES SO MUCH PAIN
+local function drawFunc(obj) --fixed it yeya
     if obj.Visible then
         love.graphics.setColor(obj.Colour.R,obj.Colour.G,obj.Colour.B,obj.Colour.A)
-        local x,y, w,h = obj:ToScreenPixels(true)
-        if obj.Clips.W ~= 0 and obj.Clips.H ~= 0 then --clips ignore zoom
-            local x, y = obj.Clips.X-obj.Clips.W*obj.Clips.AnchorX, obj.Clips.Y-obj.Clips.H*obj.Clips.AnchorY
-            if not obj.ScreenPosition then
-                x, y = x - CameraPosition.X, y - CameraPosition.Y
-            end
-            love.graphics.setScissor(x,y,obj.Clips.W,obj.Clips.H)
+        if obj.Clips.W ~= 0 and obj.Clips.H ~= 0 then
+            love.graphics.setScissor( --set the clips
+                obj.Clips.X - obj.Clips.W * obj.Clips.AnchorX,
+                obj.Clips.Y - obj.Clips.H * obj.Clips.AnchorY,
+                obj.Clips.W,
+                obj.Clips.H
+            )
         end
+        local x, y, w, h = obj:ToScreenPixels()
         if obj.ImageData.Image then
-            local sx = obj.ApplyZoom and obj.ScaleX*CameraPosition.Z or obj.ScaleX
-            local sy = obj.ApplyZoom and obj.ScaleY*CameraPosition.Z or obj.ScaleY
+            local sX, sY = obj.ApplyZoom and CameraPosition.Z or 1, obj.ApplyZoom and CameraPosition.Z or 1
             if obj.KeepBackground then
                 love.graphics.setColor(obj.BackgroundColour.R,obj.BackgroundColour.G,obj.BackgroundColour.B,obj.BackgroundColour.A)
-                local x,y,w,h = obj:ToScreenPixels(false,true)
-                love.graphics.rectangle("fill",x,y,obj.ApplyZoom and w*CameraPosition.Z or w, obj.ApplyZoom and h*CameraPosition.Z or h)
+                love.graphics.rectangle("fill", x, y, w * sX, h * sY)
                 love.graphics.setColor(obj.Colour.R,obj.Colour.G,obj.Colour.B,obj.Colour.A)
             end
             if obj.FitImageInsideWH then
-                love.graphics.draw(
-                    obj.ImageData.Image, x,y,obj.R,
-                    sx*obj.ImageData.ScaleX, sy*obj.ImageData.ScaleY,
-                    w*obj.AnchorX/obj.ImageData.ScaleX, h*obj.AnchorY/obj.ImageData.ScaleY
-                )
-            else
-                love.graphics.draw(
-                    obj.ImageData.Image, x,y,obj.R,
-                    sx,sy,
-                    w*obj.AnchorX/obj.ImageData.ScaleX, h*obj.AnchorY/obj.ImageData.ScaleY
-                )
+                sX, sY = sX * obj.ImageData.ScaleX, sY * obj.ImageData.ScaleY
             end
+            love.graphics.draw(obj.ImageData.Image, x, y, obj.R, sX, sY)
         else
-            local x,y,w,h = obj:ToScreenPixels(false,true)
-            love.graphics.rectangle("fill",x,y,obj.ApplyZoom and w*CameraPosition.Z or w, obj.ApplyZoom and h*CameraPosition.Z or h)
+            love.graphics.rectangle("fill", x, y, w, h)
         end
         love.graphics.setScissor()
     end
 end
 
-local function insertFrame(fr)
+local function insertFrame(fr) --inserts a frame carefully, doesn't ruin layering
     local placed = false
     local temp = {}
     if #mod.FramesOnZ == 0 then
@@ -71,7 +60,7 @@ local function insertFrame(fr)
             if placed then
                 temp[id+1] = frame
             else
-                if frame.Layer == "Menu" then
+                if frame.Layer == "Menu" then --I somehow messed this up that items have a higher priority than menus, whoops
                     if fr.Layer == "Menu" then
                         if fr.Z < frame.Z then
                             placed = true
@@ -102,7 +91,7 @@ local function insertFrame(fr)
     mod.TotalFrames = #mod.FramesOnZ
 end
 
-local function removeFrame(fr)
+local function removeFrame(fr) --removes a frame carefully, so it doesn't messup layering
     local found = false
     for id,frame in ipairs(mod.FramesOnZ) do
         if found then
@@ -275,7 +264,7 @@ function mod:NewFrame(x,y,w,h,z,layer,ax,ay)
         mod.Frames[obj.Id] = nil
         return nil
     end
-    function obj:ToScreenPixels(ignoreAnchors,applyScale)
+    function obj:ToScreenPixels(ignoreAnchors, applyScale)
         local x, y = obj.X, obj.Y
         local w, h = obj.W, obj.H
         if applyScale then

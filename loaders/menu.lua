@@ -223,7 +223,7 @@ function mod:GenerateTools(tileTools)
         mod.TileTools.ChangeCatagory.Collision.DetectHover = true
         mod.TileTools.ChangeCatagory.Collision.OnClick = function()
             local frames = {}
-            local mainFrame = graphics:NewFrame(WindowX/2,WindowY/2,298,118,999,"Menu")
+            local mainFrame = graphics:NewFrame(WindowX/2,WindowY/2,298,118,99,"Menu")
             mainFrame.ApplyZoom = false
             mainFrame.ScreenPosition = true
             mainFrame:SetColours(.15,.15,.15)
@@ -233,7 +233,7 @@ function mod:GenerateTools(tileTools)
             mainFrame.Collision.OnLeave = function() end
             frames[#frames+1] = mainFrame
             for cat = 100,650,50 do --generate theme buttons
-                local button = graphics:NewFrame(mainFrame.X-111+(cat/50-2)%4*74,WindowY/2-42.5+math.floor((cat/50-2)/4)*29,72,27,1000,"Menu")
+                local button = graphics:NewFrame(mainFrame.X-111+(cat/50-2)%4*74,WindowY/2-42.5+math.floor((cat/50-2)/4)*29,72,27,100,"Menu")
                 button.ApplyZoom = false
                 button.ScreenPosition = true
                 button.AnchorX = 0.5
@@ -252,7 +252,7 @@ function mod:GenerateTools(tileTools)
                 frames[#frames+1] = button
             end
             --generate saved tiles 1 button
-            local button = graphics:NewFrame(mainFrame.X-111,WindowY/2+44.5,72,27,1000,"Menu")
+            local button = graphics:NewFrame(mainFrame.X-111,WindowY/2+44.5,72,27,100,"Menu")
             button.ApplyZoom = false
             button.ScreenPosition = true
             button.AnchorX = 0.5
