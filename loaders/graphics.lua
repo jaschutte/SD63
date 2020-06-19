@@ -105,7 +105,7 @@ local function removeFrame(fr) --removes a frame carefully, so it doesn't messup
             mod.FramesOnZ[id-1] = frame
             mod.FramesOnZ[id] = nil
         end
-        if id == fr.Id then
+        if frame.Id == fr.Id then
             mod.FramesOnZ[id] = nil
             found = true
         end
