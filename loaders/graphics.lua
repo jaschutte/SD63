@@ -60,22 +60,29 @@ local function insertFrame(fr) --inserts a frame carefully, doesn't ruin layerin
             if placed then
                 temp[id+1] = frame
             else
-                if frame.Layer == "Menu" then --I somehow messed this up that items have a higher priority than menus, whoops
-                    if fr.Layer == "Menu" then
+                if fr.Layer == "Menu" then
+                    if frame.Layer == "Menu" then
                         if fr.Z < frame.Z then
                             placed = true
                             temp[id] = fr
                             temp[id+1] = frame
+                        else
+                            temp[id] = frame
                         end
+                    else
+                        temp[id] = frame
                     end
-                elseif fr.Layer == "Menu" then
-                    placed = true
-                    temp[id] = fr
                 else
-                    if fr.Z < frame.Z then
-                        placed = true
-                        temp[id] = fr
-                        temp[id+1] = frame
+                    if frame.Layer == "Menu" then
+                        temp[id] = frame
+                    else
+                        if fr.Z < frame.Z then
+                            placed = true
+                            temp[id] = fr
+                            temp[id+1] = frame
+                        else
+                            temp[id] = frame
+                        end
                     end
                 end
             end
@@ -160,8 +167,6 @@ function mod:NewFrame(x,y,w,h,z,layer,ax,ay)
     obj.R = 0
     obj.AnchorX = ax or 0.5
     obj.AnchorY = ay or 0.5
-    obj.ScaleX = 1; -- ONLY SCALES WHEN DRAWN, DOES NOT SCALE COLLISION
-    obj.ScaleY = 1; -- ONLY SCALES WHEN DRAWN, DOES NOT SCALE COLLISION
     obj.Colour = {
         R = 1;
         G = 1;
@@ -267,9 +272,6 @@ function mod:NewFrame(x,y,w,h,z,layer,ax,ay)
     function obj:ToScreenPixels(ignoreAnchors, applyScale)
         local x, y = obj.X, obj.Y
         local w, h = obj.W, obj.H
-        if applyScale then
-            w, h = w*obj.ScaleX, h*obj.ScaleY
-        end
         if obj.ApplyZoom then
             x, y = x * CameraPosition.Z, y * CameraPosition.Z
             w, h = w * CameraPosition.Z, h * CameraPosition.Z

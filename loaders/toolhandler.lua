@@ -236,8 +236,6 @@ end
 
 function mod:PlaceItem(id, x, y)
     if Textures.ItemTextures[id] then
-        --local wX, wY = x - CameraPosition.X, y - CameraPosition.Y
-        --items:New(id, wX / CameraPosition.Z, wY / CameraPosition.Z)
         items:New(id, graphics:ScreenToWorld(x, y))
     else
         print("Game used INVALID ITEM! It was ineffective..")
@@ -304,9 +302,7 @@ function mod:MouseDown(b)
                 ToolSettings.TileRange.Stage = math.min(ToolSettings.TileRange.Stage+1,3)
                 if ToolSettings.TileRange.Stage == 3 then
                     local x, y = graphics:TileToScreen(ToolSettings.TileRange.EndX, ToolSettings.TileRange.EndY)
-                    --local x, y = graphics:ScreenToWorld(x, y)
                     menu:GenerateHUD(x, y, true)
-                    --menu:GenerateHUD(x-CameraPosition.X, y-CameraPosition.Y, true)
                 end
             end
             if ToolSettings.TileTool == "fill" then

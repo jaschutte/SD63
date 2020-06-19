@@ -69,10 +69,12 @@ function mod:New(id, x, y) --create new
         y = math.floor(y/ToolSettings.ItemGrid.Y+0.5)*ToolSettings.ItemGrid.Y
     end
     local item = {}
+    item.Id = GetId()
     item.ItemId = id
     item.Frame = graphics:NewFrame(x, y) --create the frame for the item (including img)
     item.Frame:SetImage(Textures.ItemTextures[id])
     item.Frame:Resize(item.Frame.ImageData.W, item.Frame.ImageData.H)
+    item.Frame.IS_ITEM = item.ItemId
     item.Frame.Visible = true
     item.IsBeingDragged = false
     item.LastLocation = {X = 0, Y = 0}
@@ -85,11 +87,13 @@ function mod:New(id, x, y) --create new
             local now = os.clock()
             if now-item._LastPressed ~= 0 and now-item._LastPressed <= 0.3 then --0.3 is the max time between the double click
                 --open tab
-                local window = windows:NewWindow(ToolSettings.MouseX, ToolSettings.MouseY)
+                --[[local window = windows:NewWindow(ToolSettings.MouseX, ToolSettings.MouseY)
                 local frame = graphics:NewText(0, 0, 100, 50)
                 frame:SetColours(1, 0, 0)
                 frame.AnchorX, frame.AnchorY = 0, 0
                 window:Attach(frame, 0, 16, 2)
+                window:SetTitle("Modifying Item: "..item.Id)--]]
+                item:Destroy()
             end
             item._LastPressed = now
         end
@@ -115,7 +119,10 @@ function mod:New(id, x, y) --create new
             item.Stats.Dict[key] = val
         end
     end
-    item.Id = GetId()
+    function item:Destroy()
+        LD.Level.Items[self.Id] = nil
+        self.Frame:Destroy()
+    end
     LD.Level.Items[item.Id] = item
     if not ToolSettings.CtrlDown then
         ToolSettings.ItemTool = "move"
@@ -127,6 +134,7 @@ function mod:Update()
     local mx, my = ToolSettings.MouseX, ToolSettings.MouseY
     if ToolSettings.ItemTool == "move" and ToolSettings.CurrentDisplay == "Items" then
         for _,item in pairs(LD.Level.Items) do
+            --print(item.Frame.OnScreen)
             if item.IsBeingDragged then
                 local x, y = graphics:ScreenToWorld(mx, my)
                 local dx, dy = item.LastLocation.X + x, item.LastLocation.Y + y
@@ -135,7 +143,7 @@ function mod:Update()
                     fx = math.floor(dx/ToolSettings.ItemGrid.X+0.5)*ToolSettings.ItemGrid.X
                     fy = math.floor(dy/ToolSettings.ItemGrid.Y+0.5)*ToolSettings.ItemGrid.Y
                 end
-                item:Move(fx, fy)--]]
+                item:Move(fx, fy)
             end
         end
     end

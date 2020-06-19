@@ -99,6 +99,8 @@ _G.Fonts = {
     FontMin = 10;
     FontMax = 50;
     FontNames = {
+        "Inconsolata-Bold";
+        "Inconsolata-Black";
         "Inconsolata-ExtraLight";
         "Inconsolata-Light";
         "Inconsolata-Medium";

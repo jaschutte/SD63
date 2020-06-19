@@ -13,12 +13,20 @@ function mod:NewWindow(x, y, w, h) --honestly this is just placing frames togeth
     window.IsDragging = false
     window.CloseAponUnfocus = true
     window._EnableClose = os.clock() + 0.5
-    window.Title = "My Window" --todo: make this work, also add textlabels in loaders.graphics
+    window.Title = "My Window"
     window.Attached = {}
+    window.WindowScale = {
+        Enabled = false;
+        MinX = 50;
+        MinY = 50;
+        MaxX = 500;
+        MaxY = 500;
+    }
     window.Tabs = {
         MainBg = graphics:NewFrame(window.X, window.Y+16, window.W, window.H-16, window.Z, "Menu", 0, 0);
-        TopBar = graphics:NewFrame(window.X, window.Y, window.W-16, 16, window.Z+1, "Menu", 0, 0);
+        TopBar = graphics:NewText(window.X, window.Y, window.W-16, 16, window.Z+1, "Menu", 0, 0);
         ClosingIcon = graphics:NewFrame(window.X+window.W-16, window.Y, 16, 16, window.Z+1, "Menu", 0, 0);
+        ScaleIcon = graphics:NewFrame(window.X+window.W-16, window.Y+window.H-16, 16, 16, window.Z+1, "Menu", 0, 0);
     }
     --initiating some values
     window.Tabs.MainBg:SetColours(.3,.3,.3)
@@ -32,6 +40,8 @@ function mod:NewWindow(x, y, w, h) --honestly this is just placing frames togeth
     end
     --drag behaviour
     window.Tabs.TopBar:SetColours(.4,.4,.4)
+    window.Tabs.TopBar.Text = " "..window.Title
+    window.Tabs.TopBar:SetFont("InconsolataMedium", 12)
     window.Tabs.TopBar.Collision.OnClick = function(x, y)
         window.LastLocation.X, window.LastLocation.Y = x, y
         window.IsDragging = true
@@ -73,6 +83,14 @@ function mod:NewWindow(x, y, w, h) --honestly this is just placing frames togeth
             data[1]:Move(window.X + data[2], window.Y + data[3])
         end
     end
+    function window:SetScaling(enabled) --STILL NEED TO ADD FUNCTIONALITY TO SCALING BUTTON!!
+        self.WindowScale.Enabled = enabled
+        self.Tabs.ScaleIcon.Visible = enabled
+    end
+    function window:SetTitle(s)
+        self.Text = s
+        self.Tabs.TopBar.Text = " "..s
+    end
     function window:Attach(frame, offx, offy, z)
         z = z or 1
         frame.AponDeletion[GetId()] = function(fr) --make sure the same gets deattached when deleted, would cause nasty problems otherwise
@@ -88,6 +106,7 @@ function mod:NewWindow(x, y, w, h) --honestly this is just placing frames togeth
     function window:DeAttach(frame) --only accepts a frame, NOT AN ID!
         self.Attached[frame.Id] = nil
     end
+    window:SetScaling(false)
     self.Windows[window.Id] = window
     return window
 end
