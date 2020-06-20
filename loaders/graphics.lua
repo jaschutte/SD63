@@ -297,21 +297,105 @@ function mod:NewText(x,y,w,h,z,layer,ax,ay)
     obj.Text = "Hello, World!"
     obj.FontColour = {R = 0, G = 0, B = 0, A = 1}
     obj.Font = Fonts.FontObjs.InconsolataMedium[12]
+    obj.ScreenPosition = true --Textfields can't be accesable in worldspace, mainly due to clips
+    obj.ApplyZoom = false
+    obj.SizePerCharacter = {W = obj.Font:getWidth(" "), H = obj.Font:getHeight(" ")}
+    obj.TextOffsetX = 0
+    obj.TextOffsetY = 0
+    obj.TextSelection = {
+        Start = 0;
+        End = 0;
+        R = 0;
+        G = 1;
+        B = 1;
+        A = 0.5;
+        _Draw = {};
+    }
+    function obj:SetSelection(s, e) --if the text changes this must be changed as well, THIS ISN'T AUTOMATIC!
+        self.TextSelection.Start = s or self.TextSelection.Start
+        self.TextSelection.End = e or self.TextSelection.End
+        self.TextSelection._Draw = {}
+        if self.TextSelection.Start ~= 0 then --this isn't efficient but I don't care that much at this point, it caused enough pain.
+            local lines = {}
+            local _line = {"", 0, 1}
+            for c in self.Text:gmatch(".") do --collect all of the lines
+                _line[2] = _line[2] + 1
+                if c == "\n" then
+                    lines[#lines+1] = {Start = _line[3], Str = _line[1]}
+                    _line[1] = ""
+                    _line[3] = _line[2]
+                else
+                    _line[1] = _line[1]..c
+                end
+            end
+            lines[#lines+1] = {Start = _line[3], Str = _line[1]}
+            for y,line in ipairs(lines) do --loop through the lines and loop the characters
+                local i = line.Start
+                local sx, sy = -1, -1
+                for _ in line.Str:gmatch(".") do
+                    if i >= self.TextSelection.Start and sx == -1 then
+                        sx, sy = (i - line.Start) * self.SizePerCharacter.W, (y - 1) * self.SizePerCharacter.H
+                    end
+                    if i == self.TextSelection.End then --if we reached the end. STOP!
+                        break
+                    end
+                    i = i + 1
+                end
+                if sx ~= -1 then
+                    self.TextSelection._Draw[#self.TextSelection._Draw+1] = {
+                        sx, sy,
+                        (i - line.Start) * self.SizePerCharacter.W - sx, y * self.SizePerCharacter.H - sy
+                    }
+                end
+            end
+        end
+    end
+    function obj:TextToPosition(cPos, mode) --modes: a = absolute, objpos + textpos | c = character, returns the character in this line | r = relative (default), textpos
+        local sub = self.Text:sub(1, cPos)
+        local x = sub:reverse():find("\n") or #sub --I really don't want to use :reverse() but I suppose it's required (tried starting search at -1)
+        local y = #sub:gsub("[^%c\n]", "")
+        if mode == "a" then
+            return self.X + x * self.SizePerCharacter.W, self.Y + y * self.SizePerCharacter.H
+        elseif mode == "c" then
+            return x, y
+        else
+            return x * self.SizePerCharacter.W, y * self.SizePerCharacter.H
+        end
+    end
+    function obj:GetTextByPosition(x, y) --requires TEXTPOS (relative) position
+        
+    end
     function obj:SetFont(name, size)
         if Fonts.FontObjs[name] then
             size = clamp(size - size%Fonts.FontIncrement, Fonts.FontMin, Fonts.FontMax)
             obj.Font = Fonts.FontObjs[name][size]
+            obj.SizePerCharacter.W, obj.SizePerCharacter.H = obj.Font:getWidth(" "), obj.Font:getHeight(" ")
         else
             print("Sorry, but we don't allow blackmarket fonts here. Come back once you got the legal stuff!")
         end
     end
     function obj:Draw()
         drawFunc(obj)
+        --self:TextToPosition(5)
+        self:TextToPosition(4)
         love.graphics.setColor(obj.FontColour.R, obj.FontColour.B, obj.FontColour.G, obj.FontColour.A)
         love.graphics.setFont(obj.Font)
-        love.graphics.print(obj.Text, obj.X, obj.Y)
+        love.graphics.setScissor(obj.X, obj.Y, obj.W, obj.H)
+        love.graphics.print(obj.Text, obj.X + obj.SizePerCharacter.W * obj.TextOffsetX, obj.Y + obj.SizePerCharacter.H * obj.TextOffsetY)
+        love.graphics.setColor(self.TextSelection.R, self.TextSelection.B, self.TextSelection.G, self.TextSelection.A)
+        for _,draw in pairs(self.TextSelection._Draw) do
+            love.graphics.rectangle("fill", self.X + draw[1], self.Y + draw[2], draw[3], draw[4])
+        end
+        love.graphics.setScissor()
     end
+    obj:Move(x, y)
+    obj:Resize(w, h)
     return obj
+end
+
+function mod:NewEditableText(x,y,w,h,z,layer,ax,ay)
+    local obj = self:NewText(x,y,w,h,z,layer,ax,ay)
+    --obj.
 end
 
 function mod:WorldToScreen(x, y)

@@ -11,6 +11,7 @@ function mod:NewWindow(x, y, w, h) --honestly this is just placing frames togeth
     window.LastLocation = {X = window.X, Y = window.Y}
     window.Id = GetId()
     window.IsDragging = false
+    window.IsScaled = false
     window.CloseAponUnfocus = true
     window._EnableClose = os.clock() + 0.5
     window.Title = "My Window"
@@ -37,6 +38,14 @@ function mod:NewWindow(x, y, w, h) --honestly this is just placing frames togeth
         tab.Collision.OnEnter = nil
         tab.Collision.OnLeave = nil
         tab.Collision.DetectHover = true
+    end
+    --scale behaviour
+    window.Tabs.ScaleIcon.Collision.OnClick = function(x, y)
+        window.LastLocation.X, window.LastLocation.Y = x, y
+        window.IsScaled = true
+    end
+    window.Tabs.ScaleIcon.Collision.OnUp = function(x, y)
+        window.IsScaled = false
     end
     --drag behaviour
     window.Tabs.TopBar:SetColours(.4,.4,.4)
@@ -74,13 +83,21 @@ function mod:NewWindow(x, y, w, h) --honestly this is just placing frames togeth
         graphics:MassDelete(att)
         mod.Windows[self.Id] = nil
     end
+    function window:Resize(w, h)
+        self.W, self.H = w or self.W, h or self.H
+        self.Tabs.MainBg:Resize(self.W, self.H - 16)
+        self.Tabs.TopBar:Resize(self.W-16, 16)
+        self.Tabs.ClosingIcon:Move(self.X+self.W-16, self.Y)
+        self.Tabs.ScaleIcon:Move(self.X+self.W-16, self.Y+self.H-16)
+    end
     function window:Move(x, y) --invoke when moving the window, also updates attached frames
         self.X, self.Y = x or self.X, y or self.Y
-        self.Tabs.MainBg:Move(window.X, window.Y+16)
-        self.Tabs.TopBar:Move(window.X, window.Y)
-        self.Tabs.ClosingIcon:Move(window.X+window.W-16, window.Y)
+        self.Tabs.MainBg:Move(self.X, self.Y+16)
+        self.Tabs.TopBar:Move(self.X, self.Y)
+        self.Tabs.ClosingIcon:Move(self.X+self.W-16, self.Y)
+        self.Tabs.ScaleIcon:Move(self.X+self.W-16, self.Y+self.H-16)
         for _,data in pairs(self.Attached) do
-            data[1]:Move(window.X + data[2], window.Y + data[3])
+            data[1]:Move(self.X + data[2], self.Y + data[3])
         end
     end
     function window:SetScaling(enabled) --STILL NEED TO ADD FUNCTIONALITY TO SCALING BUTTON!!
@@ -125,6 +142,10 @@ function mod:OnMove(x, y)
         if window.IsDragging then
             local dx, dy = window.LastLocation.X - x, window.LastLocation.Y - y
             window:Move(window.X - dx, window.Y - dy)
+            window.LastLocation.X, window.LastLocation.Y = x, y
+        elseif window.IsScaled then
+            local dx, dy = window.LastLocation.X - x, window.LastLocation.Y - y
+            window:Resize(window.W - dx, window.H - dy)
             window.LastLocation.X, window.LastLocation.Y = x, y
         end
     end
