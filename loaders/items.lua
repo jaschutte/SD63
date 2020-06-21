@@ -91,7 +91,10 @@ function mod:New(id, x, y) --create new
                 local frame = graphics:NewEditableText(0, 0, 100, 16)
                 frame:SetFont("InconsolataMedium", 14)
                 frame.Settings.NumberOnly = true
-                frame:SetColours(.4, .4, .4)
+                frame:SetColours(.35, .35, .35)
+                frame.OnCompletion = function(enter)
+                    print(frame.Text, enter)
+                end
                 frame.AnchorX, frame.AnchorY = 0, 0
                 window:SetScaling(true)
                 window:Attach(frame, 0, 16, 2)

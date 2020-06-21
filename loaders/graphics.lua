@@ -398,16 +398,16 @@ function mod:NewEditableText(x,y,w,h,z,layer,ax,ay)
     obj.IsFocussed = false
     obj.Cursor = 1
     obj.OnCompletion = nil --this will be fired when the editing of this text got completed (arguments: (bool): returnPressed)
-    obj.LastPress = {os.clock(), -1}
+    obj.Text = ""
     obj.Settings = {
         MultiLine = false;
         MaxLines = -1; --has no effect is multiline is disabled, -1 means no limit
         NumberOnly = false;
-        RoundNumber = 0; --has no effect is numneronly is disabled, -1 means no rounding, if enabled multiline gets disabled
+        RoundNumber = -1; --has no effect is numneronly is disabled, -1 means no rounding, if enabled multiline gets disabled
         ReadOnly = false; --this disabled the editing, making it static
     }
     obj.Collision.OnClick = function()
-        if obj.Settings.ReadOnly then
+        if not obj.Settings.ReadOnly then
             obj.IsFocussed = os.clock() + 0.5
             ToolSettings.BlockInput = obj
         end
@@ -418,6 +418,17 @@ function mod:NewEditableText(x,y,w,h,z,layer,ax,ay)
         if obj.IsFocussed then
             obj.IsFocussed = false
             ToolSettings.BlockInput = false
+            if obj.Settings.NumberOnly then
+                local last = obj.Text:sub(-1, -1)
+                if last == "." or last == "-" then
+                    obj.Text = obj.Text.."0"
+                end
+                local n = tonumber(obj.Text) or 0
+                if obj.Settings.RoundNumber >= 0 then
+                    n = math.floor(n*(10^obj.Settings.RoundNumber)+.5)/(10^obj.Settings.RoundNumber) --rounding with customizable decimals
+                end
+                obj.Text = tostring(n)
+            end
             if obj.OnCompletion then
                 obj.OnCompletion()
             end
@@ -609,77 +620,117 @@ function mod:DrawHovers()
 end
 
 function mod:OnKeyPress(key)
+    key = love.keyboard.getScancodeFromKey(key) --make it listen to universal signals
     local textbox = ToolSettings.BlockInput
 
-    if key == "left" then --a switch command would be usefull now..
-        textbox.Cursor = math.max(0, textbox.Cursor - 1)
-    elseif key == "right" then
-        textbox.Cursor = math.min(#textbox.Text, textbox.Cursor + 1)
-    elseif key == "down" then --there are better methods of doing up and down but this works fine so I don't see the need
-        local offset
-        for _,line in ipairs(textbox._Lines) do --loop through the lines from top to bottom
-            if offset then
-                textbox.Cursor = math.min(line.Start + #line.Str, line.Start + offset)
-                break
-            elseif textbox.Cursor >= line.Start and textbox.Cursor <= line.Start + #line.Str then
-                offset = textbox.Cursor - line.Start
-            end
-        end
-    elseif key == "up" then
-        local offset
-        for y = #textbox._Lines, 0, -1 do --loop through the lines from bottom to top
-            local line = textbox._Lines[y]
-            if line then
+    if textbox then
+        if key == "left" then --a switch command would be usefull now..
+            textbox.Cursor = math.max(0, textbox.Cursor - 1)
+        elseif key == "right" then
+            textbox.Cursor = math.min(#textbox.Text, textbox.Cursor + 1)
+        elseif key == "down" then --there are better methods of doing up and down but this works fine so I don't see the need
+            local offset
+            for _,line in ipairs(textbox._Lines) do --loop through the lines from top to bottom
                 if offset then
                     textbox.Cursor = math.min(line.Start + #line.Str, line.Start + offset)
                     break
                 elseif textbox.Cursor >= line.Start and textbox.Cursor <= line.Start + #line.Str then
-                    offset = textbox.Cursor - line.Start --get the offset
+                    offset = textbox.Cursor - line.Start
                 end
             end
-        end
-    elseif key == "delete" then
-        local from = textbox.Text:sub(1, textbox.Cursor)
-        local to = textbox.Text:sub(textbox.Cursor + 2)
-        textbox.Text = from..to
-    elseif key == "backspace" then
-        local from = textbox.Text:sub(1, math.max(0, textbox.Cursor - 1))
-        local to = textbox.Text:sub(textbox.Cursor + 1)
-        textbox.Text = from..to
-        textbox.Cursor = math.max(0, textbox.Cursor - 1)
-    elseif key == "return" then
-        if textbox.Settings.MultiLine then
+        elseif key == "up" then
+            local offset
+            for y = #textbox._Lines, 0, -1 do --loop through the lines from bottom to top
+                local line = textbox._Lines[y]
+                if line then
+                    if offset then
+                        textbox.Cursor = math.min(line.Start + #line.Str, line.Start + offset)
+                        break
+                    elseif textbox.Cursor >= line.Start and textbox.Cursor <= line.Start + #line.Str then
+                        offset = textbox.Cursor - line.Start --get the offset
+                    end
+                end
+            end
+        elseif key == "delete" then
             local from = textbox.Text:sub(1, textbox.Cursor)
+            local to = textbox.Text:sub(textbox.Cursor + 2)
+            textbox.Text = from..to
+        elseif key == "backspace" then
+            local from = textbox.Text:sub(1, math.max(0, textbox.Cursor - 1))
             local to = textbox.Text:sub(textbox.Cursor + 1)
-            if textbox.Settings.MaxLines ~= -1 then --if it exceeds max lines, do nothing
-                local _, lines = textbox.Text:gsub("\n", "\n")
-                lines = lines + 1
-                if lines < textbox.Settings.MaxLines then
+            textbox.Text = from..to
+            textbox.Cursor = math.max(0, textbox.Cursor - 1)
+        elseif key == "tab" then
+            local from = textbox.Text:sub(1, math.max(0, textbox.Cursor))
+            local to = textbox.Text:sub(textbox.Cursor + 1)
+            textbox.Text = from.."    "..to --not adding \t because that just breaks everything lul
+            textbox.Cursor = math.min(#textbox.Text, textbox.Cursor + 4)
+        elseif key == "return" then
+            if textbox.Settings.MultiLine then
+                local from = textbox.Text:sub(1, textbox.Cursor)
+                local to = textbox.Text:sub(textbox.Cursor + 1)
+                if textbox.Settings.MaxLines ~= -1 then --if it exceeds max lines, do nothing
+                    local _, lines = textbox.Text:gsub("\n", "\n")
+                    lines = lines + 1
+                    if lines < textbox.Settings.MaxLines then
+                        textbox.Text = from.."\n"..to
+                        textbox.Cursor = math.min(#textbox.Text, textbox.Cursor + 1)
+                    end
+                else
                     textbox.Text = from.."\n"..to
                     textbox.Cursor = math.min(#textbox.Text, textbox.Cursor + 1)
                 end
             else
-                textbox.Text = from.."\n"..to
-                textbox.Cursor = math.min(#textbox.Text, textbox.Cursor + 1)
-            end
-        else
-            if textbox.OnCompletion then
-                textbox.OnCompletion(true)
+                if textbox.Settings.NumberOnly then
+                    local last = textbox.Text:sub(-1, -1)
+                    if last == "." or last == "-" then
+                        textbox.Text = textbox.Text.."0"
+                    end
+                    local n = tonumber(textbox.Text) or 0
+                    if textbox.Settings.RoundNumber >= 0 then
+                        n = math.floor(n*(10^textbox.Settings.RoundNumber)+.5)/(10^textbox.Settings.RoundNumber) --rounding with customizable decimals
+                    end
+                    textbox.Text = tostring(n)
+                end
+                textbox.IsFocussed = false
+                ToolSettings.BlockInput = false
+                if textbox.OnCompletion then
+                    textbox.OnCompletion(true)
+                end
             end
         end
     end
-
-    textbox.LastPress = {os.clock(), key} --update the clock timer (for holding down keys)
 end
 
 function mod:OnText(key) --luckily this doesn't fire when OnKeyPress fires, so it won't cause trouble
     local textbox = ToolSettings.BlockInput
-    local from = textbox.Text:sub(1, textbox.Cursor)
-    local to = textbox.Text:sub(textbox.Cursor + 1)
-    textbox.Text = from..key..to
-    textbox.Cursor = math.min(#textbox.Text, textbox.Cursor + 1)
-
-    textbox.LastPress = {os.clock(), key} --update the clock timer (for holding down keys)
+    if textbox then
+        local from = textbox.Text:sub(1, textbox.Cursor)
+        local to = textbox.Text:sub(textbox.Cursor + 1)
+        if textbox.Settings.NumberOnly then
+            local n = tonumber(key)
+            if n then --check if it's a number
+                textbox.Text = from..key..to
+                textbox.Cursor = math.min(#textbox.Text, textbox.Cursor + 1)
+            elseif key == "." then --or a dot
+                textbox.Text = from:gsub("%.", "")..key..to:gsub("%.", "") --remove all old dots and insert a new one here
+                textbox.Cursor = math.min(#textbox.Text, textbox.Cursor + 1)
+            elseif key == "-" then --or a minus
+                local hasMinus = textbox.Text:find("-")
+                if hasMinus then
+                    local new, found = textbox.Text:gsub("-", "")
+                    textbox.Text = new
+                    textbox.Cursor = math.max(0, textbox.Cursor - found)
+                else
+                    textbox.Text = "-"..textbox.Text
+                    textbox.Cursor = math.min(#textbox.Text, textbox.Cursor + 1)
+                end
+            end
+        else
+            textbox.Text = from..key..to
+            textbox.Cursor = math.min(#textbox.Text, textbox.Cursor + 1)
+        end
+    end
 end
 
 function mod:UpdateMessages(dt) --update the messages so their state updates
