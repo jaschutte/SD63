@@ -6,6 +6,7 @@ local floor, min, max = math.floor, math.min, math.max
 mod.Frames = {}
 mod.FramesOnZ = {}
 mod.Messages = {}
+mod.EditableTexts = {}
 mod.DrawHoverTile = false
 mod.DrawTileSelection = false
 mod.TotalFrames = 0
@@ -302,6 +303,7 @@ function mod:NewText(x,y,w,h,z,layer,ax,ay)
     obj.SizePerCharacter = {W = obj.Font:getWidth(" "), H = obj.Font:getHeight(" ")}
     obj.TextOffsetX = 0
     obj.TextOffsetY = 0
+    obj._Lines = {}
     obj.TextSelection = {
         Start = 0;
         End = 0;
@@ -312,47 +314,12 @@ function mod:NewText(x,y,w,h,z,layer,ax,ay)
         _Draw = {};
     }
     function obj:SetSelection(s, e) --if the text changes this must be changed as well, THIS ISN'T AUTOMATIC!
-        self.TextSelection.Start = s or self.TextSelection.Start
-        self.TextSelection.End = e or self.TextSelection.End
-        self.TextSelection._Draw = {}
-        if self.TextSelection.Start ~= 0 then --this isn't efficient but I don't care that much at this point, it caused enough pain.
-            local lines = {}
-            local _line = {"", 0, 1}
-            for c in self.Text:gmatch(".") do --collect all of the lines
-                _line[2] = _line[2] + 1
-                if c == "\n" then
-                    lines[#lines+1] = {Start = _line[3], Str = _line[1]}
-                    _line[1] = ""
-                    _line[3] = _line[2]
-                else
-                    _line[1] = _line[1]..c
-                end
-            end
-            lines[#lines+1] = {Start = _line[3], Str = _line[1]}
-            for y,line in ipairs(lines) do --loop through the lines and loop the characters
-                local i = line.Start
-                local sx, sy = -1, -1
-                for _ in line.Str:gmatch(".") do
-                    if i >= self.TextSelection.Start and sx == -1 then
-                        sx, sy = (i - line.Start) * self.SizePerCharacter.W, (y - 1) * self.SizePerCharacter.H
-                    end
-                    if i == self.TextSelection.End then --if we reached the end. STOP!
-                        break
-                    end
-                    i = i + 1
-                end
-                if sx ~= -1 then
-                    self.TextSelection._Draw[#self.TextSelection._Draw+1] = {
-                        sx, sy,
-                        (i - line.Start) * self.SizePerCharacter.W - sx, y * self.SizePerCharacter.H - sy
-                    }
-                end
-            end
-        end
+        --broken, fix this later, not now
     end
     function obj:TextToPosition(cPos, mode) --modes: a = absolute, objpos + textpos | c = character, returns the character in this line | r = relative (default), textpos
         local sub = self.Text:sub(1, cPos)
-        local x = sub:reverse():find("\n") or #sub --I really don't want to use :reverse() but I suppose it's required (tried starting search at -1)
+        local breaks = sub:reverse():find("\n")
+        local x = breaks and breaks - 1 or #sub --I really don't want to use :reverse() but I suppose it's required (tried starting search at -1)
         local y = #sub:gsub("[^%c\n]", "")
         if mode == "a" then
             return self.X + x * self.SizePerCharacter.W, self.Y + y * self.SizePerCharacter.H
@@ -363,7 +330,12 @@ function mod:NewText(x,y,w,h,z,layer,ax,ay)
         end
     end
     function obj:GetTextByPosition(x, y) --requires TEXTPOS (relative) position
-        
+        for i = 1,#self.Text do
+            local gx, gy = self:TextToPosition(i)
+            if x == gx and gy == y then
+                return self:sub(i, i), i
+            end
+        end
     end
     function obj:SetFont(name, size)
         if Fonts.FontObjs[name] then
@@ -374,28 +346,103 @@ function mod:NewText(x,y,w,h,z,layer,ax,ay)
             print("Sorry, but we don't allow blackmarket fonts here. Come back once you got the legal stuff!")
         end
     end
+    obj.AfterDraw = nil --this will be run after normal draw has been called (still within the scissors though)
+    function obj:Insert(pos, str)
+        local from = self.Text:sub(1, pos)
+        local to = self.Text:sub(pos + 1)
+        self.Text = from..str..to
+    end
     function obj:Draw()
-        drawFunc(obj)
-        --self:TextToPosition(5)
-        self:TextToPosition(4)
-        love.graphics.setColor(obj.FontColour.R, obj.FontColour.B, obj.FontColour.G, obj.FontColour.A)
-        love.graphics.setFont(obj.Font)
-        love.graphics.setScissor(obj.X, obj.Y, obj.W, obj.H)
-        love.graphics.print(obj.Text, obj.X + obj.SizePerCharacter.W * obj.TextOffsetX, obj.Y + obj.SizePerCharacter.H * obj.TextOffsetY)
+        drawFunc(self)
+        love.graphics.setFont(self.Font)
+        love.graphics.setScissor(self.X, self.Y, self.W, self.H)
+        love.graphics.setColor(self.FontColour.R, self.FontColour.B, self.FontColour.G, self.FontColour.A)
+        love.graphics.print(self.Text, self.X + self.SizePerCharacter.W * self.TextOffsetX, self.Y + self.SizePerCharacter.H * self.TextOffsetY)
         love.graphics.setColor(self.TextSelection.R, self.TextSelection.B, self.TextSelection.G, self.TextSelection.A)
-        for _,draw in pairs(self.TextSelection._Draw) do
+        for _,draw in pairs(self.TextSelection._Draw) do --for the textselection
             love.graphics.rectangle("fill", self.X + draw[1], self.Y + draw[2], draw[3], draw[4])
         end
+        if self.AfterDraw then self.AfterDraw() end
         love.graphics.setScissor()
     end
     obj:Move(x, y)
     obj:Resize(w, h)
-    return obj
+    local meta = setmetatable({},{
+        __index = function(_, key)
+            return obj[key]
+        end;
+        __newindex = function(_, key, val)
+            obj[key] = val
+            local _line = {"", 0, 0}
+            if key == "Text" then --auto update the lines if text is modified
+                obj._Lines = {}
+                for c in obj.Text:gmatch(".") do --collect all of the lines
+                    _line[2] = _line[2] + 1
+                    if c == "\n" then
+                        obj._Lines[#obj._Lines+1] = {Start = _line[3], Str = _line[1]}
+                        _line[1] = ""
+                        _line[3] = _line[2]
+                    else
+                        _line[1] = _line[1]..c
+                    end
+                end
+                obj._Lines[#obj._Lines+1] = {Start = _line[3], Str = _line[1]}
+            end
+        end
+    })
+    return meta
 end
 
 function mod:NewEditableText(x,y,w,h,z,layer,ax,ay)
     local obj = self:NewText(x,y,w,h,z,layer,ax,ay)
-    --obj.
+    obj.IsFocussed = false
+    obj.Cursor = 1
+    obj.OnCompletion = nil --this will be fired when the editing of this text got completed (arguments: (bool): returnPressed)
+    obj.LastPress = {os.clock(), -1}
+    obj.Settings = {
+        MultiLine = false;
+        MaxLines = -1; --has no effect is multiline is disabled, -1 means no limit
+        NumberOnly = false;
+        RoundNumber = 0; --has no effect is numneronly is disabled, -1 means no rounding, if enabled multiline gets disabled
+        ReadOnly = false; --this disabled the editing, making it static
+    }
+    obj.Collision.OnClick = function()
+        if obj.Settings.ReadOnly then
+            obj.IsFocussed = os.clock() + 0.5
+            ToolSettings.BlockInput = obj
+        end
+    end
+    obj.Collision.DetectHover = true
+    obj.Collision.OnEnter = nil
+    obj.Collision.OnLeave = function()
+        if obj.IsFocussed then
+            obj.IsFocussed = false
+            ToolSettings.BlockInput = false
+            if obj.OnCompletion then
+                obj.OnCompletion()
+            end
+        end
+    end
+    obj.AfterDraw = function()
+        if obj.IsFocussed then --add the mouse cursor when editing text
+            if obj.IsFocussed > 0 then --if positive draw
+                local x, y = obj:TextToPosition(obj.Cursor, "a")
+                love.graphics.setColor(obj.FontColour.R, obj.FontColour.B, obj.FontColour.G, obj.FontColour.A)
+                love.graphics.line(x, y, x, y + obj.SizePerCharacter.H)
+            end
+            if obj.IsFocussed > 0 and os.clock() >= obj.IsFocussed then --set the clock to negative
+                obj.IsFocussed = -os.clock() - 0.5
+            end
+            if obj.IsFocussed <= 0 and -os.clock() <= obj.IsFocussed then --set the clock to positive
+                obj.IsFocussed = os.clock() + 0.5
+            end
+        end
+    end
+    obj.AponDeletion[obj.Id] = function() --add this so it also gets removed from EditableTexts
+        mod.EditableTexts[obj.Id] = nil
+    end
+    self.EditableTexts[obj.Id] = obj
+    return obj
 end
 
 function mod:WorldToScreen(x, y)
@@ -559,6 +606,80 @@ function mod:DrawHovers()
         love.graphics.setColor(0,1,1,.5)
         love.graphics.rectangle("fill",sx,sy,dx,dy)
     end
+end
+
+function mod:OnKeyPress(key)
+    local textbox = ToolSettings.BlockInput
+
+    if key == "left" then --a switch command would be usefull now..
+        textbox.Cursor = math.max(0, textbox.Cursor - 1)
+    elseif key == "right" then
+        textbox.Cursor = math.min(#textbox.Text, textbox.Cursor + 1)
+    elseif key == "down" then --there are better methods of doing up and down but this works fine so I don't see the need
+        local offset
+        for _,line in ipairs(textbox._Lines) do --loop through the lines from top to bottom
+            if offset then
+                textbox.Cursor = math.min(line.Start + #line.Str, line.Start + offset)
+                break
+            elseif textbox.Cursor >= line.Start and textbox.Cursor <= line.Start + #line.Str then
+                offset = textbox.Cursor - line.Start
+            end
+        end
+    elseif key == "up" then
+        local offset
+        for y = #textbox._Lines, 0, -1 do --loop through the lines from bottom to top
+            local line = textbox._Lines[y]
+            if line then
+                if offset then
+                    textbox.Cursor = math.min(line.Start + #line.Str, line.Start + offset)
+                    break
+                elseif textbox.Cursor >= line.Start and textbox.Cursor <= line.Start + #line.Str then
+                    offset = textbox.Cursor - line.Start --get the offset
+                end
+            end
+        end
+    elseif key == "delete" then
+        local from = textbox.Text:sub(1, textbox.Cursor)
+        local to = textbox.Text:sub(textbox.Cursor + 2)
+        textbox.Text = from..to
+    elseif key == "backspace" then
+        local from = textbox.Text:sub(1, math.max(0, textbox.Cursor - 1))
+        local to = textbox.Text:sub(textbox.Cursor + 1)
+        textbox.Text = from..to
+        textbox.Cursor = math.max(0, textbox.Cursor - 1)
+    elseif key == "return" then
+        if textbox.Settings.MultiLine then
+            local from = textbox.Text:sub(1, textbox.Cursor)
+            local to = textbox.Text:sub(textbox.Cursor + 1)
+            if textbox.Settings.MaxLines ~= -1 then --if it exceeds max lines, do nothing
+                local _, lines = textbox.Text:gsub("\n", "\n")
+                lines = lines + 1
+                if lines < textbox.Settings.MaxLines then
+                    textbox.Text = from.."\n"..to
+                    textbox.Cursor = math.min(#textbox.Text, textbox.Cursor + 1)
+                end
+            else
+                textbox.Text = from.."\n"..to
+                textbox.Cursor = math.min(#textbox.Text, textbox.Cursor + 1)
+            end
+        else
+            if textbox.OnCompletion then
+                textbox.OnCompletion(true)
+            end
+        end
+    end
+
+    textbox.LastPress = {os.clock(), key} --update the clock timer (for holding down keys)
+end
+
+function mod:OnText(key) --luckily this doesn't fire when OnKeyPress fires, so it won't cause trouble
+    local textbox = ToolSettings.BlockInput
+    local from = textbox.Text:sub(1, textbox.Cursor)
+    local to = textbox.Text:sub(textbox.Cursor + 1)
+    textbox.Text = from..key..to
+    textbox.Cursor = math.min(#textbox.Text, textbox.Cursor + 1)
+
+    textbox.LastPress = {os.clock(), key} --update the clock timer (for holding down keys)
 end
 
 function mod:UpdateMessages(dt) --update the messages so their state updates

@@ -143,7 +143,7 @@ function mod:OnMove(x, y)
             local dx, dy = window.LastLocation.X - x, window.LastLocation.Y - y
             window:Move(window.X - dx, window.Y - dy)
             window.LastLocation.X, window.LastLocation.Y = x, y
-        elseif window.IsScaled then
+        elseif window.IsScaled then --resizing still needs worK (aka; resize bounds and fix negative resizes)
             local dx, dy = window.LastLocation.X - x, window.LastLocation.Y - y
             window:Resize(window.W - dx, window.H - dy)
             window.LastLocation.X, window.LastLocation.Y = x, y

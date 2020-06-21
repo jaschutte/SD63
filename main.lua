@@ -34,6 +34,7 @@ _G.PrintTable = function(...)
     end
 end
 _G.ToolSettings = {
+    BlockInput = false;
     CurrentDisplay = false;
     UIBlockingMouse = false;
     EraserMode = false;
@@ -186,6 +187,7 @@ function love.load()
             Fonts.FontObjs[sub][i] = love.graphics.newFont("fonts/"..name..".ttf", i)
         end
     end
+    love.keyboard.setKeyRepeat(true)
     --setup default Level
     for x = 1,50 do
         LD.Level.Tiles[x] = {}
@@ -308,18 +310,36 @@ function love.mousemoved(mx,my)
 end
 
 function love.textinput(key)
-    if key == "-" then
-        CameraPosition.Z = math.max(CameraPosition.Z - .2,.4)
-    elseif key == "=" then
-        CameraPosition.Z = math.min(CameraPosition.Z + .2,2)
+    graphics:OnText(key)
+    if not ToolSettings.BlockInput then --(again) don't move when busy editing text
+        if key == "-" then
+            CameraPosition.Z = math.max(CameraPosition.Z - .2,.4)
+        elseif key == "=" then
+            CameraPosition.Z = math.min(CameraPosition.Z + .2,2)
+        end
     end
 end
 
 function love.keypressed(key)
-    tools:OnKeyPress(key) --update the tools library
+    if key == "lshift" then
+        ToolSettings.ShiftDown = true
+    end
+    if key == "lctrl" then
+        ToolSettings.CtrlDown = true
+    end
+    graphics:OnKeyPress(key) --update the textboxes
+    if not ToolSettings.BlockInput then --if a textbox is being editing, ignore the signal
+        tools:OnKeyPress(key) --update the tools library
+    end
 end
 
 function love.keyreleased(key)
+    if key == "lshift" then
+        ToolSettings.ShiftDown = false
+    end
+    if key == "lctrl" then
+        ToolSettings.CtrlDown = false
+    end
     tools:OnKeyRelease(key) --update the tools library
 end
 
@@ -328,17 +348,19 @@ function love.update(dt)
     --camera
     local cX, cY = CameraPosition.X, CameraPosition.Y
     local ch = 500*dt*LD.Settings.CameraSpeed
-    if love.keyboard.isDown("w") or love.keyboard.isDown("up") then
-        CameraPosition.Y = CameraPosition.Y + ch
-    end
-    if love.keyboard.isDown("s") or love.keyboard.isDown("down") then
-        CameraPosition.Y = CameraPosition.Y - ch
-    end
-    if love.keyboard.isDown("a") or love.keyboard.isDown("left") then
-        CameraPosition.X = CameraPosition.X + ch
-    end
-    if love.keyboard.isDown("d") or love.keyboard.isDown("right") then
-        CameraPosition.X = CameraPosition.X - ch
+    if not ToolSettings.BlockInput then --don't move if the textbox is being edited
+        if love.keyboard.isDown("w") or love.keyboard.isDown("up") then
+            CameraPosition.Y = CameraPosition.Y + ch
+        end
+        if love.keyboard.isDown("s") or love.keyboard.isDown("down") then
+            CameraPosition.Y = CameraPosition.Y - ch
+        end
+        if love.keyboard.isDown("a") or love.keyboard.isDown("left") then
+            CameraPosition.X = CameraPosition.X + ch
+        end
+        if love.keyboard.isDown("d") or love.keyboard.isDown("right") then
+            CameraPosition.X = CameraPosition.X - ch
+        end
     end
     --update frames if camera moved
     _FRAMES_UNTIL_RECACL = _FRAMES_UNTIL_RECACL + 1

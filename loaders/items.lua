@@ -88,11 +88,11 @@ function mod:New(id, x, y) --create new
             if now-item._LastPressed ~= 0 and now-item._LastPressed <= 0.3 then --0.3 is the max time between the double click
                 --open tab
                 local window = windows:NewWindow(ToolSettings.MouseX, ToolSettings.MouseY)
-                local frame = graphics:NewText(0, 0, 100, 50)
-                frame:SetColours(1, 0, 0)
+                local frame = graphics:NewEditableText(0, 0, 100, 16)
+                frame:SetFont("InconsolataMedium", 14)
+                frame.Settings.NumberOnly = true
+                frame:SetColours(.4, .4, .4)
                 frame.AnchorX, frame.AnchorY = 0, 0
-                frame.Text = "Epic\nGamer!"
-                frame:SetSelection(2, 7)
                 window:SetScaling(true)
                 window:Attach(frame, 0, 16, 2)
                 window:SetTitle("Modifying Item: "..item.Id)
