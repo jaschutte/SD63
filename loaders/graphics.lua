@@ -405,6 +405,11 @@ function mod:NewEditableText(x,y,w,h,z,layer,ax,ay)
         NumberOnly = false;
         RoundNumber = -1; --has no effect is numneronly is disabled, -1 means no rounding, if enabled multiline gets disabled
         ReadOnly = false; --this disabled the editing, making it static
+        Bounds = {
+            Enabled = true;
+            Min = 0;
+            Max = 360;
+        };
     }
     obj.Collision.OnClick = function()
         if not obj.Settings.ReadOnly then
@@ -426,6 +431,9 @@ function mod:NewEditableText(x,y,w,h,z,layer,ax,ay)
                 local n = tonumber(obj.Text) or 0
                 if obj.Settings.RoundNumber >= 0 then
                     n = math.floor(n*(10^obj.Settings.RoundNumber)+.5)/(10^obj.Settings.RoundNumber) --rounding with customizable decimals
+                end
+                if obj.Settings.Bounds.Enabled then
+                    n = clamp(n, obj.Settings.Bounds.Min, obj.Settings.Bounds.Max)
                 end
                 obj.Text = tostring(n)
             end
@@ -689,6 +697,9 @@ function mod:OnKeyPress(key)
                     local n = tonumber(textbox.Text) or 0
                     if textbox.Settings.RoundNumber >= 0 then
                         n = math.floor(n*(10^textbox.Settings.RoundNumber)+.5)/(10^textbox.Settings.RoundNumber) --rounding with customizable decimals
+                    end
+                    if textbox.Settings.Bounds.Enabled then
+                        n = clamp(n, textbox.Settings.Bounds.Min, textbox.Settings.Bounds.Max)
                     end
                     textbox.Text = tostring(n)
                 end
