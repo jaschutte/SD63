@@ -1,7 +1,7 @@
 
 _G.WindowX, _G.WindowY = love.window.getMode()
 love.window.setTitle("Super Designer 63")
-love.window.setMode(WindowX,WindowY,{resizable = true, minwidth=500, minheight=375, vsync = false})
+love.window.setMode(WindowX,WindowY,{resizable = true, minwidth=500, minheight=375, vsync = true})
 love.graphics.setBackgroundColor(0,0,.5)
 
 _G.CameraPosition = {X = 0, Y = 0, Z = 1} --Z is camera zoom; z<1 = zoomout; x>1 = zoomin

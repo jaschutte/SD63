@@ -297,7 +297,7 @@ function mod:NewText(x,y,w,h,z,layer,ax,ay)
     local obj = self:NewFrame(x,y,w,h,z,layer,ax,ay)
     obj.Text = "Hello, World!"
     obj.FontColour = {R = 0, G = 0, B = 0, A = 1}
-    obj.Font = Fonts.FontObjs.InconsolataMedium[12]
+    obj.Font = Fonts.FontObjs.InconsolataMedium[14]
     obj.ScreenPosition = true --Textfields can't be accesable in worldspace, mainly due to clips
     obj.ApplyZoom = false
     obj.SizePerCharacter = {W = obj.Font:getWidth(" "), H = obj.Font:getHeight(" ")}
@@ -365,6 +365,7 @@ function mod:NewText(x,y,w,h,z,layer,ax,ay)
         if self.AfterDraw then self.AfterDraw() end
         love.graphics.setScissor()
     end
+    obj.AnchorX, obj.AnchorY = 0, 0
     obj:Move(x, y)
     obj:Resize(w, h)
     local meta = setmetatable({},{
@@ -395,6 +396,7 @@ end
 
 function mod:NewEditableText(x,y,w,h,z,layer,ax,ay)
     local obj = self:NewText(x,y,w,h,z,layer,ax,ay)
+    obj.AnchorX, obj.AnchorY = 0, 0
     obj.IsFocussed = false
     obj.Cursor = 1
     obj.OnCompletion = nil --this will be fired when the editing of this text got completed (arguments: (bool): returnPressed)

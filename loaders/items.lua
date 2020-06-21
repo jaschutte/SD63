@@ -3,8 +3,11 @@ local graphics = require("loaders.graphics")
 local windows = require("loaders.window")
 
 local mod = {}
+mod.DisplayForStat = {}
+mod.SpecialStats = {}
 
 function mod:Init()
+    --create the list for item initialization
     local global = {
         ["1"] = {Stats = {0, 0, "Right"};Desc = {"X Speed", "Y Speed", "Direction"};};
         ["7"] = {Stats = {3, 0, 30, 0, 0, 0, "Right", "none", 0.5, 1, 0, 25}; Desc = {"X Speed", "Y Speed", "X Length", "Y Length", "X Offset", "Y Offset", "X Direction", "Y Direction", "Acceleration", "Size", "Touch & Go", "Count"};};
@@ -32,6 +35,31 @@ function mod:Init()
     for i = 78, 81 do global[tostring(i)] = {Stats = {30}; Desc = {"Duration"}} end
     for i = 100, 145 do global[tostring(i)] = global["41"] end
     self.SpecialStats = global
+    --the drawing functions for those stats
+    local function defLabel(key, x, y, w, h, window)
+        local label = graphics:NewText(0, 0, w/2, h)
+        label.Text = key:gsub("%u", function(c) return " "..c end)
+        label:SetColours(0, 0, 0, 0)
+        window:Attach(label, x, y, 2)
+    end
+    local function defaultNum(key, val, x, y, w, h, window)
+        defLabel(key, x, y, w, h, window)
+        local label = graphics:NewEditableText(0, 0, w/2, h)
+        label.Settings.NumberOnly = true
+        label.Settings.RoundNumber = 2
+        label.Text = tostring(val)
+        label:SetColours(.35, .35, .35)
+        window:Attach(label, x + w/2, y, 2)
+    end
+    mod.DisplayForStat.ItemId = function(key, val, x, y, w, h, window)
+        defLabel(key, x, y, w, h, window)
+        local label = graphics:NewEditableText(0, 0, w/2, h)
+        label.Settings.ReadOnly = true
+        label.Text = tostring(val)
+        label:SetColours(.35, .35, .35)
+        window:Attach(label, x + w/2, y, 2)
+    end
+    mod.DisplayForStat.Default = defaultNum
 end
 
 function mod:GetStats(item)
@@ -56,6 +84,7 @@ function mod:GetStats(item)
         local key = stats.Desc[i]
         if key then
             key = key:gsub(" ","") --remove all spaces, to re-add them is simple, key:gsub("%u", function(c) return " "..c end)
+            stats.Desc[i] = key
             stats.Dict[key] = val
         end
     end
@@ -88,16 +117,25 @@ function mod:New(id, x, y) --create new
             if now-item._LastPressed ~= 0 and now-item._LastPressed <= 0.3 then --0.3 is the max time between the double click
                 --open tab
                 local window = windows:NewWindow(ToolSettings.MouseX, ToolSettings.MouseY)
-                local frame = graphics:NewEditableText(0, 0, 100, 16)
-                frame:SetFont("InconsolataMedium", 14)
-                frame.Settings.NumberOnly = true
-                frame:SetColours(.35, .35, .35)
-                frame.OnCompletion = function(enter)
-                    print(frame.Text, enter)
+                window:Resize(400, 300)
+                local basic = graphics:NewText(0, 0, window.W - 4, 64)
+                basic.Text = "  Basic Settings"
+                basic:SetFont("InconsolataBold", 16)
+                basic:SetColours(.25, .25, .25)
+                basic.AnchorX, basic.AnchorY = 0, 0
+                window:Attach(basic, 2, 18)
+                self.DisplayForStat.Default("ItemId", item.Stats.Dict.ItemId, 0, 38, (window.W - 4)/2, 16, window)
+                self.DisplayForStat.Default("X", item.Stats.Dict.X, 0, 56, (window.W - 4)/2, 16, window)
+                self.DisplayForStat.Default("Y", item.Stats.Dict.Y, (window.W - 4)/2, 38, (window.W - 4)/2, 16, window)
+                for i,key in ipairs(item.Stats.Desc) do
+                    if i >= 4 then
+                        if self.DisplayForStat[key] then
+                            self.DisplayForStat[key](key, item.Stats.Dict[key], 0, i * 18 + 40, window.W / 2, 16, window)
+                        else
+                            self.DisplayForStat.Default(key, item.Stats.Dict[key], 0, i * 18 + 40, 200, 16, window)
+                        end
+                    end
                 end
-                frame.AnchorX, frame.AnchorY = 0, 0
-                window:SetScaling(true)
-                window:Attach(frame, 0, 16, 2)
                 window:SetTitle("Modifying Item: "..item.Id)
             end
             item._LastPressed = now
