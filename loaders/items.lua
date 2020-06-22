@@ -5,6 +5,11 @@ local windows = require("loaders.window")
 local mod = {}
 mod.DisplayForStat = {}
 mod.SpecialStats = {}
+mod.NamesForId = {
+    [1] = "Spawn"; [2] = "Coin"; [3] = "Red Coin"; [4] = "Blue Coin"; [5] = "Silver Star"; [6] = "Shrine"; [7] = "Green Platform"; [8] = "Rotating Green Platforms"; [9] = "Rotating Square";
+    [10] = "Node"; [11] = "Falling Node";
+}
+mod.Appearance = {Mirror = true, Angle = true, Color = true, Frame = true, BlockType = true, Size = true, Depth = true, Length = true}
 
 function mod:Init()
     --create the list for item initialization
@@ -40,26 +45,104 @@ function mod:Init()
         local label = graphics:NewText(0, 0, w/2, h)
         label.Text = key:gsub("%u", function(c) return " "..c end)
         label:SetColours(0, 0, 0, 0)
-        window:Attach(label, x, y, 2)
+        window:Attach(label, x, y, 2) --index is 2 so it doesn't collide with the textboxes which are 3
     end
-    local function defaultNum(key, val, x, y, w, h, window)
+    local function defaultNum(item, key, val, x, y, w, h, window)
         defLabel(key, x, y, w, h, window)
         local label = graphics:NewEditableText(0, 0, w/2, h)
         label.Settings.NumberOnly = true
         label.Settings.RoundNumber = 2
         label.Text = tostring(val)
         label:SetColours(.35, .35, .35)
-        window:Attach(label, x + w/2, y, 2)
+        window:Attach(label, x + w/2, y, 3)
     end
-    mod.DisplayForStat.ItemId = function(key, val, x, y, w, h, window)
+    local function defaultDir(item, val, x, y, w, h, window, first, second, third) --default direction value function
+        local button = graphics:NewText(0, 0, w/2, h)
+        button.Text = val
+        button.Collision.OnClick = function()
+            button.Text = third and (button.Text == first and second or button.Text == second and third or first) or (button.Text == first and second or first) --cycle through the phases
+            if third then
+                if button.Text == first then --update the colours
+                    button:SetColours(.45, .45, .45)
+                elseif button.Text == second then
+                    button:SetColours(.6, .2, 0)
+                else
+                    button:SetColours(0, .3, .6)
+                end
+            elseif button.Text == first then
+                button:SetColours(.6, 0, 0)
+            else
+                button:SetColours(0, .6, .6)
+            end
+        end
+        if third then
+            if button.Text == first then --update the colours
+                button:SetColours(.45, .45, .45)
+            elseif button.Text == second then
+                button:SetColours(.6, .2, 0)
+            else
+                button:SetColours(0, .3, .6)
+            end
+        elseif button.Text == first then
+            button:SetColours(.6, 0, 0)
+        else
+            button:SetColours(0, .6, .6)
+        end
+        window:Attach(button, x + w/2, y, 3)
+    end
+
+    self.DisplayForStat.ItemId = function(item, key, val, x, y, w, h, window)
         defLabel(key, x, y, w, h, window)
         local label = graphics:NewEditableText(0, 0, w/2, h)
         label.Settings.ReadOnly = true
         label.Text = tostring(val)
-        label:SetColours(.35, .35, .35)
-        window:Attach(label, x + w/2, y, 2)
+        label:SetColours(0, 0, 0, 0)
+        window:Attach(label, x + w/2, y, 3)
     end
-    mod.DisplayForStat.Default = defaultNum
+    
+    self.DisplayForStat.Direction = function(item, key, val, x, y, w, h, window)
+        defLabel(key, x, y, w, h, window)
+        defaultDir(item, val, x, y, w, h, window, "Both", "Left", "Right")
+    end
+    self.DisplayForStat.XDirection = function(item, key, val, x, y, w, h, window)
+        defLabel(key, x, y, w, h, window)
+        defaultDir(item, val, x, y, w, h, window, "none", "Left", "Right")
+    end
+    self.DisplayForStat.YDirection = function(item, key, val, x, y, w, h, window)
+        defLabel(key, x, y, w, h, window)
+        defaultDir(item, val, x, y, w, h, window, "none", "Up", "Down")
+    end
+    self.DisplayForStat.RotationDirection = function(item, key, val, x, y, w, h, window)
+        defLabel(key, x, y, w, h, window)
+        defaultDir(item, val, x, y, w, h, window, "Left", "Right")
+    end
+
+    self.DisplayForStat.NoDecimals = function(item, key, val, x, y, w, h, window)
+        defLabel(key, x, y, w, h, window)
+        local label = graphics:NewEditableText(0, 0, w/2, h)
+        label.Settings.NumberOnly = true
+        label.Settings.RoundNumber = 0
+        label.Text = tostring(math.floor(val+.5))
+        label:SetColours(.35, .35, .35)
+        window:Attach(label, x + w/2, y, 3)
+    end
+
+    self.DisplayForStat.Depth = function(item, key, val, x, y, w, h, window)
+        defLabel(key, x, y, w, h, window)
+        local label = graphics:NewEditableText(0, 0, w/2, h)
+        label.Settings.NumberOnly = true
+        label.Settings.RoundNumber = 0
+        label.Settings.Bounds.Enabled = true
+        label.Settings.Bounds.Min = 0
+        label.Settings.Bounds.Max = math.huge
+        label.Text = tostring(math.floor(val+.5))
+        label:SetColours(.35, .35, .35)
+        window:Attach(label, x + w/2, y, 3)
+    end
+    self.DisplayForStat.Length = self.DisplayForStat.Depth
+
+    self.DisplayForStat.Unknown = self.DisplayForStat.ItemId
+    self.DisplayForStat.Default = defaultNum
 end
 
 function mod:GetStats(item)
@@ -117,26 +200,69 @@ function mod:New(id, x, y) --create new
             if now-item._LastPressed ~= 0 and now-item._LastPressed <= 0.3 then --0.3 is the max time between the double click
                 --open tab
                 local window = windows:NewWindow(ToolSettings.MouseX, ToolSettings.MouseY)
-                window:Resize(400, 300)
-                local basic = graphics:NewText(0, 0, window.W - 4, 64)
-                basic.Text = "  Basic Settings"
+                window:Resize(550, 300)
+                --basic textboxes
+                local basic = graphics:NewText(0, 0, window.W - 4, 59)
+                basic.Text = "  Basic Attributes"
                 basic:SetFont("InconsolataBold", 16)
+                print(basic.SizePerCharacter.H)
                 basic:SetColours(.25, .25, .25)
                 basic.AnchorX, basic.AnchorY = 0, 0
                 window:Attach(basic, 2, 18)
-                self.DisplayForStat.Default("ItemId", item.Stats.Dict.ItemId, 0, 38, (window.W - 4)/2, 16, window)
-                self.DisplayForStat.Default("X", item.Stats.Dict.X, 0, 56, (window.W - 4)/2, 16, window)
-                self.DisplayForStat.Default("Y", item.Stats.Dict.Y, (window.W - 4)/2, 38, (window.W - 4)/2, 16, window)
+                self.DisplayForStat.ItemId(item, "ItemId", item.Stats.Dict.ItemId, 0, 41, (window.W - 4)/2, 16, window)
+                self.DisplayForStat.NoDecimals(item, "X", item.Stats.Dict.X, 0, 59, (window.W - 4)/2, 16, window)
+                self.DisplayForStat.NoDecimals(item, "Y", item.Stats.Dict.Y, (window.W - 4)/2, 59, (window.W - 4)/2, 16, window)
+                
+                local offsetS, offsetA = 0, 0 --place "advanced" textboxes
                 for i,key in ipairs(item.Stats.Desc) do
                     if i >= 4 then
-                        if self.DisplayForStat[key] then
-                            self.DisplayForStat[key](key, item.Stats.Dict[key], 0, i * 18 + 40, window.W / 2, 16, window)
+                        if not self.Appearance[key] then
+                            offsetS = offsetS + 1
                         else
-                            self.DisplayForStat.Default(key, item.Stats.Dict[key], 0, i * 18 + 40, 200, 16, window)
+                            offsetA = offsetA + 1
                         end
                     end
                 end
-                window:SetTitle("Modifying Item: "..item.Id)
+                local _a, _s = 0, 0
+                for i,key in ipairs(item.Stats.Desc) do
+                    if i >= 4 then
+                        local offset, yOff
+                        if self.Appearance[key] then
+                            offset = _a; _a = _a + 1
+                            yOff = math.ceil(offsetS/2) * 18 + 104 + (offsetS ~= 0 and 23 or -2)
+                        else
+                            offset = _s; _s = _s + 1;
+                            yOff = 102
+                        end
+                        if self.DisplayForStat[key] then
+                            self.DisplayForStat[key](item, key, item.Stats.Dict[key], offset%2 * (window.W - 4)/2, math.floor(offset/2) * 18 + yOff, (window.W - 4)/2, 16, window)
+                        else
+                            self.DisplayForStat.Default(item, key, item.Stats.Dict[key], offset%2 * (window.W - 4)/2, math.floor(offset/2) * 18 + yOff, (window.W - 4)/2, 16, window)
+                        end
+                    end
+                end
+                local height = 79
+                if offsetS ~= 0 then --if there are no advanced options, don't place
+                    local specific = graphics:NewText(0, 0, window.W - 4, math.ceil(offsetS/2) * 18 + 23)
+                    specific.Text = "  Advanced Settings"
+                    specific:SetFont("InconsolataBold", 16)
+                    specific:SetColours(.25, .25, .25)
+                    specific.AnchorX, basic.AnchorY = 0, 0
+                    window:Attach(specific, 2, 79)
+                    height = height + math.ceil(offsetS/2) * 18 + 25
+                end
+                if offsetA ~= 0 then --if there are no advanced options, don't place
+                    local appear = graphics:NewText(0, 0, window.W - 4, math.ceil(offsetA/2) * 18 + 23)
+                    appear.Text = "  Appearance"
+                    appear:SetFont("InconsolataBold", 16)
+                    appear:SetColours(.25, .25, .25)
+                    appear.AnchorX, basic.AnchorY = 0, 0
+                    window:Attach(appear, 2, math.ceil(offsetS/2) * 18 + 81 + (offsetS ~= 0 and 23 or -2))
+                    height = height + math.ceil(offsetA/2) * 18 + 25
+                end
+
+                window:Resize(window.W, height)
+                window:SetTitle("Modifying Item: "..(self.NamesForId[item.ItemId] or "ERR: No Name Found").." (#"..item.Id..")")
             end
             item._LastPressed = now
         end

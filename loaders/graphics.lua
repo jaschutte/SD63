@@ -408,7 +408,7 @@ function mod:NewEditableText(x,y,w,h,z,layer,ax,ay)
         RoundNumber = -1; --has no effect is numneronly is disabled, -1 means no rounding, if enabled multiline gets disabled
         ReadOnly = false; --this disabled the editing, making it static
         Bounds = {
-            Enabled = true;
+            Enabled = false;
             Min = 0;
             Max = 360;
         };
