@@ -52,6 +52,12 @@ function mod:NewWindow(x, y, w, h) --honestly this is just placing frames togeth
     --drag behaviour
     window.Tabs.TopBar:SetColours(unpack(Colours.WindowUI.TopBar))
     window.Tabs.TopBar.Text = " "..window.Title
+    window.Tabs.TopBar.FontColour = {
+        R = Colours.WindowUI.HeaderTextColour[1] or 0,
+        G = Colours.WindowUI.HeaderTextColour[2] or 0,
+        B = Colours.WindowUI.HeaderTextColour[3] or 0,
+        A = Colours.WindowUI.HeaderTextColour[4] or 1;
+    }
     window.Tabs.TopBar:SetFont("InconsolataMedium", 12)
     window.Tabs.TopBar.Collision.OnClick = function(x, y)
         window.LastLocation.X, window.LastLocation.Y = x, y

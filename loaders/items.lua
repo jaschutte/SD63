@@ -48,6 +48,12 @@ function mod:Init()
         if #label.Text >= 14 then
             label.Text = label.Text:sub(1, 12)..".."
         end
+        label.FontColour = {
+            R = Colours.WindowUI.SubTextColour[1] or 0,
+            G = Colours.WindowUI.SubTextColour[2] or 0,
+            B = Colours.WindowUI.SubTextColour[3] or 0,
+            A = Colours.WindowUI.SubTextColour[4] or 1;
+        }
         label:SetColours(unpack(Colours.WindowUI.ReadOnly))
         window:Attach(label, x, y, 2) --index is 2 so it doesn't collide with the textboxes which are 3
         return label
@@ -61,6 +67,12 @@ function mod:Init()
             item.Stats.Dict[key] = tonumber(label.Text)
         end
         label.Text = tostring(val)
+        label.FontColour = {
+            R = Colours.WindowUI.NormalTextColour[1] or 0,
+            G = Colours.WindowUI.NormalTextColour[2] or 0,
+            B = Colours.WindowUI.NormalTextColour[3] or 0,
+            A = Colours.WindowUI.NormalTextColour[4] or 1;
+        }
         label:SetColours(unpack(Colours.WindowUI.NormalField))
         window:Attach(label, x + w/2, y, 3)
         return label
@@ -100,6 +112,12 @@ function mod:Init()
         button.OnCompletion = function()
             item.Stats.Dict[key] = button.Text
         end
+        button.FontColour = {
+            R = Colours.WindowUI.NormalTextColour[1] or 0,
+            G = Colours.WindowUI.NormalTextColour[2] or 0,
+            B = Colours.WindowUI.NormalTextColour[3] or 0,
+            A = Colours.WindowUI.NormalTextColour[4] or 1;
+        }
         window:Attach(button, x + w/2, y, 3)
         return button
     end
@@ -135,6 +153,12 @@ function mod:Init()
         label.Settings.ReadOnly = true
         label.Text = tostring(val)
         label:SetColours(unpack(Colours.WindowUI.ReadOnly))
+        label.FontColour = {
+            R = Colours.WindowUI.NormalTextColour[1] or 0,
+            G = Colours.WindowUI.NormalTextColour[2] or 0,
+            B = Colours.WindowUI.NormalTextColour[3] or 0,
+            A = Colours.WindowUI.NormalTextColour[4] or 1;
+        }
         window:Attach(label, x + w/2, y, 3)
     end
     self.DisplayForStat.NoDecimals = function(item, key, val, x, y, w, h, window) --fallback for no decimal textboxes
@@ -146,6 +170,12 @@ function mod:Init()
         label.OnCompletion = function()
             item.Stats.Dict[key] = tonumber(label.Text)
         end
+        label.FontColour = {
+            R = Colours.WindowUI.NormalTextColour[1] or 0,
+            G = Colours.WindowUI.NormalTextColour[2] or 0,
+            B = Colours.WindowUI.NormalTextColour[3] or 0,
+            A = Colours.WindowUI.NormalTextColour[4] or 1;
+        }
         label:SetColours(unpack(Colours.WindowUI.NormalField))
         window:Attach(label, x + w/2, y, 3)
         addSub(item, key, x, y, w, h, label, window, 1)
@@ -182,6 +212,12 @@ function mod:Init()
         label.OnCompletion = function()
             item.Stats.Dict[key] = tonumber(label.Text)
         end
+        label.FontColour = {
+            R = Colours.WindowUI.NormalTextColour[1] or 0,
+            G = Colours.WindowUI.NormalTextColour[2] or 0,
+            B = Colours.WindowUI.NormalTextColour[3] or 0,
+            A = Colours.WindowUI.NormalTextColour[4] or 1;
+        }
         label:SetColours(unpack(Colours.WindowUI.NormalField))
         window:Attach(label, x + w/2, y, 3)
         addSub(item, key, x, y, w, h, label, window, 16, 0)
@@ -199,6 +235,12 @@ function mod:Init()
             item.Stats.Dict[key] = tonumber(label.Text)
         end
         label:SetColours(unpack(Colours.WindowUI.NormalField))
+        label.FontColour = {
+            R = Colours.WindowUI.NormalTextColour[1] or 0,
+            G = Colours.WindowUI.NormalTextColour[2] or 0,
+            B = Colours.WindowUI.NormalTextColour[3] or 0,
+            A = Colours.WindowUI.NormalTextColour[4] or 1;
+        }
         window:Attach(label, x + w/2, y, 3)
         addSub(item, key, x, y, w, h, label, window, 2)
     end
@@ -215,6 +257,12 @@ function mod:Init()
         label.OnCompletion = function()
             item.Stats.Dict[key] = tonumber(label.Text)
         end
+        label.FontColour = {
+            R = Colours.WindowUI.NormalTextColour[1] or 0,
+            G = Colours.WindowUI.NormalTextColour[2] or 0,
+            B = Colours.WindowUI.NormalTextColour[3] or 0,
+            A = Colours.WindowUI.NormalTextColour[4] or 1;
+        }
         label:SetColours(unpack(Colours.WindowUI.NormalField))
         window:Attach(label, x + w/2, y, 3)
         addSub(item, key, x, y, w, h, label, window, 8, 0)
@@ -236,6 +284,12 @@ function mod:Init()
             item.Stats.Dict[key] = tonumber(label.Text)
         end
         label:SetColours(unpack(Colours.WindowUI.NormalField))
+        label.FontColour = {
+            R = Colours.WindowUI.NormalTextColour[1] or 0,
+            G = Colours.WindowUI.NormalTextColour[2] or 0,
+            B = Colours.WindowUI.NormalTextColour[3] or 0,
+            A = Colours.WindowUI.NormalTextColour[4] or 1;
+        }
         window:Attach(label, x + w/2, y, 3)
         addSub(item, key, x, y, w, h, label, window, 1, 1, 6)
     end
@@ -252,6 +306,12 @@ function mod:Init()
             item.Stats.Dict[key] = tonumber(label.Text)
         end
         label:SetColours(unpack(Colours.WindowUI.NormalField))
+        label.FontColour = {
+            R = Colours.WindowUI.NormalTextColour[1] or 0,
+            G = Colours.WindowUI.NormalTextColour[2] or 0,
+            B = Colours.WindowUI.NormalTextColour[3] or 0,
+            A = Colours.WindowUI.NormalTextColour[4] or 1;
+        }
         window:Attach(label, x + w/2, y, 3)
         addSub(item, key, x, y, w, h, label, window, 1, 1, 31)
     end
@@ -268,6 +328,12 @@ function mod:Init()
             item.Stats.Dict[key] = tonumber(label.Text)
         end
         label:SetColours(unpack(Colours.WindowUI.NormalField))
+        label.FontColour = {
+            R = Colours.WindowUI.NormalTextColour[1] or 0,
+            G = Colours.WindowUI.NormalTextColour[2] or 0,
+            B = Colours.WindowUI.NormalTextColour[3] or 0,
+            A = Colours.WindowUI.NormalTextColour[4] or 1;
+        }
         window:Attach(label, x + w/2, y, 3)
         addSub(item, key, x, y, w, h, label, window, 1, 1, 9)
     end
@@ -284,6 +350,12 @@ function mod:Init()
             item.Stats.Dict[key] = tonumber(label.Text)
         end
         label:SetColours(unpack(Colours.WindowUI.NormalField))
+        label.FontColour = {
+            R = Colours.WindowUI.NormalTextColour[1] or 0,
+            G = Colours.WindowUI.NormalTextColour[2] or 0,
+            B = Colours.WindowUI.NormalTextColour[3] or 0,
+            A = Colours.WindowUI.NormalTextColour[4] or 1;
+        }
         window:Attach(label, x + w/2, y, 3)
         addSub(item, key, x, y, w, h, label, window, 1, 1, 3)
     end
@@ -302,6 +374,12 @@ function mod:Init()
             item.Stats.Dict[key] = tonumber(label.Text)
         end
         label:SetColours(unpack(Colours.WindowUI.NormalField))
+        label.FontColour = {
+            R = Colours.WindowUI.NormalTextColour[1] or 0,
+            G = Colours.WindowUI.NormalTextColour[2] or 0,
+            B = Colours.WindowUI.NormalTextColour[3] or 0,
+            A = Colours.WindowUI.NormalTextColour[4] or 1;
+        }
         window:Attach(label, x + w/2, y, 3)
         local add, sub = addSub(item, key, x, y, w, h, label, window, 5, 0, 360)
         add.Collision.OnClick = function()
@@ -404,6 +482,12 @@ function mod:New(id, x, y) --create new
                 --basic textboxes
                 local basic = graphics:NewText(0, 0, window.W - 4, 59)
                 basic.Text = "  Basic Attributes"
+                basic.FontColour = {
+                    R = Colours.WindowUI.HeaderTextColour[1] or 0,
+                    G = Colours.WindowUI.HeaderTextColour[2] or 0,
+                    B = Colours.WindowUI.HeaderTextColour[3] or 0,
+                    A = Colours.WindowUI.HeaderTextColour[4] or 1;
+                }
                 basic:SetFont("InconsolataBold", 16)
                 basic:SetColours(unpack(Colours.WindowUI.Tab))
                 basic.AnchorX, basic.AnchorY = 0, 0
@@ -444,6 +528,12 @@ function mod:New(id, x, y) --create new
                 if offsetS ~= 0 then --if there are no advanced options, don't place
                     local specific = graphics:NewText(0, 0, window.W - 4, math.ceil(offsetS/2) * 18 + 23)
                     specific.Text = "  Advanced Settings"
+                    specific.FontColour = {
+                        R = Colours.WindowUI.HeaderTextColour[1] or 0,
+                        G = Colours.WindowUI.HeaderTextColour[2] or 0,
+                        B = Colours.WindowUI.HeaderTextColour[3] or 0,
+                        A = Colours.WindowUI.HeaderTextColour[4] or 1;
+                    }
                     specific:SetFont("InconsolataBold", 16)
                     specific:SetColours(unpack(Colours.WindowUI.Tab))
                     specific.AnchorX, basic.AnchorY = 0, 0
@@ -453,6 +543,12 @@ function mod:New(id, x, y) --create new
                 if offsetA ~= 0 then --if there are no advanced options, don't place
                     local appear = graphics:NewText(0, 0, window.W - 4, math.ceil(offsetA/2) * 18 + 23)
                     appear.Text = "  Appearance"
+                    appear.FontColour = {
+                        R = Colours.WindowUI.HeaderTextColour[1] or 0,
+                        G = Colours.WindowUI.HeaderTextColour[2] or 0,
+                        B = Colours.WindowUI.HeaderTextColour[3] or 0,
+                        A = Colours.WindowUI.HeaderTextColour[4] or 1;
+                    }
                     appear:SetFont("InconsolataBold", 16)
                     appear:SetColours(unpack(Colours.WindowUI.Tab))
                     appear.AnchorX, basic.AnchorY = 0, 0

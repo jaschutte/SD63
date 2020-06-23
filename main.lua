@@ -113,6 +113,9 @@ _G.Colours = { --was planning to make a metatable out of this so it automaticly 
         TrippleOptionField3 = {0, .3, .6};
         DoubleOptionField1 = {.6, 0, 0};
         DoubleOptionField2 = {0, .3, .6};
+        HeaderTextColour = {.8, .8, .8};
+        SubTextColour = {.7, .7, .7};
+        NormalTextColour = {1, 1, 1};
     }
 }
 _G.Fonts = {
