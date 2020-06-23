@@ -1,5 +1,6 @@
 
 local graphics = require("loaders.graphics")
+local windows = require("loaders.window")
 local decode = require("loaders.decode")
 local menuTextures = Textures.MenuTextures
 local mod = {}
@@ -333,6 +334,38 @@ function mod:GenerateTools(tileTools)
         mod.ItemTools.Eraser.Collision.OnClick = function()
             ToolSettings.EraserMode = true
         end
+        --the change catagory button for items
+        mod.ItemTools.ChangeCatagory = graphics:NewFrame(LD.Settings.ToolHolder.X+LD.Settings.ToolHolder.SizeX/2,2,144,54,2,"Menu")
+        mod.ItemTools.ChangeCatagory.ApplyZoom = false
+        mod.ItemTools.ChangeCatagory.ScreenPosition = true
+        mod.ItemTools.ChangeCatagory.AnchorY = 0
+        mod.ItemTools.ChangeCatagory:SetImage(Textures.MenuTextures["THEME/ITEMS/"..ToolSettings.ItemCatagory])
+        mod.ItemTools.ChangeCatagory.Collision.DetectHover = true
+        mod.ItemTools.ChangeCatagory.Collision.OnClick = function()
+            local window = windows:NewWindow(WindowX/2 - 75, WindowY/2 - 30, 150, 77)
+            for i = 0, 100, 50 do
+                local catagory = graphics:NewFrame(0, 0, 72, 27)
+                catagory.AnchorX, catagory.AnchorY = 0, 0
+                catagory:SetImage(Textures.MenuTextures["THEME/ITEMS/"..i])
+                catagory.FitImageInsideWH = true
+                catagory.Collision.DetectHover = true
+                catagory.Collision.OnClick = function()
+                    ToolSettings.ItemCatagory = i
+                    mod.ItemTools.ChangeCatagory:SetImage(Textures.MenuTextures["THEME/ITEMS/"..i])
+                    mod:GenerateIcons()
+                    window:Close()
+                end
+                window:Attach(catagory, i <= 50 and i/50 * 74 + 2 or 2, i == 100 and 48 or 18)
+            end
+            local catagory = graphics:NewFrame(0, 0, 72, 27)
+            catagory.AnchorX, catagory.AnchorY = 0, 0
+            catagory:SetImage(Textures.MenuTextures["THEME/ITEMS/saved #2"])
+            catagory.FitImageInsideWH = true
+            catagory.Collision.DetectHover = true
+            window:Attach(catagory, 76, 48)
+            window:SetTitle("Select A Catagory")
+        end
+        mod.ItemTools.ChangeCatagory.Visible = true
         mod.ItemTools.Eraser.Visible = true
     end
 end

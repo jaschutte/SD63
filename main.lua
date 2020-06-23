@@ -94,7 +94,25 @@ _G.LD = {
         }
     };
 }
-
+_G.Colours = { --was planning to make a metatable out of this so it automaticly returns the 3 values. Then decided it wasn't worth the effort. Oh well~
+    Standard = {
+        BoolYes = {0, .5, 0};
+        BoolNo = {.5, 0, 0};
+    };
+    WindowUI = {
+        TopBar = {.2, .2, .2};
+        MainBg = {.3, .3, .3};
+        Text = {0, 0, 0};
+        Tab = {.25, .25, .25};
+        ReadOnly = {0, 0, 0, 0};
+        NormalField = {.35, .35, .35};
+        TrippleOptionField1 = {.45, .45, .45};
+        TrippleOptionField2 = {.6, .2, 0};
+        TrippleOptionField3 = {0, .3, .6};
+        DoubleOptionField1 = {.6, 0, 0};
+        DoubleOptionField2 = {0, .3, .6};
+    }
+}
 _G.Fonts = {
     FontIncrement = 2;
     FontMin = 10;
@@ -178,6 +196,11 @@ function love.load()
     local dir = "textures/themes/tiles"
     for _,texture in pairs(love.filesystem.getDirectoryItems(dir)) do
         Textures.MenuTextures["THEME/TILES/"..texture:sub(1,-5)] = love.graphics.newImage(dir.."/"..texture)
+    end
+    local dir = "textures/themes/items"
+    for _,texture in pairs(love.filesystem.getDirectoryItems(dir)) do
+        print("THEME/ITEMS/"..texture:sub(1,-5))
+        Textures.MenuTextures["THEME/ITEMS/"..texture:sub(1,-5)] = love.graphics.newImage(dir.."/"..texture)
     end
     --load font
     for _,name in pairs(Fonts.FontNames) do

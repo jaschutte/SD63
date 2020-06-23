@@ -30,13 +30,15 @@ function mod:NewWindow(x, y, w, h) --honestly this is just placing frames togeth
         ScaleIcon = graphics:NewFrame(window.X+window.W-16, window.Y+window.H-16, 16, 16, window.Z+1, "Menu", 0, 0);
     }
     --initiating some values
-    window.Tabs.MainBg:SetColours(.3,.3,.3)
+    window.Tabs.MainBg:SetColours(unpack(Colours.WindowUI.MainBg))
     for _,tab in pairs(window.Tabs) do
         tab.Visible = true
         tab.ScreenPosition = true
         tab.ApplyZoom = false
-        tab.Collision.OnEnter = nil
-        tab.Collision.OnLeave = nil
+        if tab ~= window.Tabs.ClosingIcon and tab ~= window.Tabs.ScaleIcon then
+            tab.Collision.OnEnter = nil
+            tab.Collision.OnLeave = nil
+        end
         tab.Collision.DetectHover = true
     end
     --scale behaviour
@@ -48,7 +50,7 @@ function mod:NewWindow(x, y, w, h) --honestly this is just placing frames togeth
         window.IsScaled = false
     end
     --drag behaviour
-    window.Tabs.TopBar:SetColours(.4,.4,.4)
+    window.Tabs.TopBar:SetColours(unpack(Colours.WindowUI.TopBar))
     window.Tabs.TopBar.Text = " "..window.Title
     window.Tabs.TopBar:SetFont("InconsolataMedium", 12)
     window.Tabs.TopBar.Collision.OnClick = function(x, y)

@@ -549,7 +549,7 @@ function mod:DrawTiles()
     local dx, dy = mod:TileToScreen(tx,ty)
     local dw, dh = mod:TileToScreen(bx+1,by+1)
     dw, dh = dw-dx, dh-dy
-    love.graphics.setColor(0,0,1)
+    love.graphics.setColor(0,0,.8)
     love.graphics.rectangle("fill",dx,dy,dw,dh)
     love.graphics.setColor(1,1,1)
     for x = tx,bx do

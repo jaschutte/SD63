@@ -44,7 +44,7 @@ function mod:Init()
     local function defLabel(key, x, y, w, h, window)
         local label = graphics:NewText(0, 0, w/2, h)
         label.Text = key:gsub("%u", function(c) return " "..c end)
-        label:SetColours(0, 0, 0, 0)
+        label:SetColours(unpack(Colours.WindowUI.ReadOnly))
         window:Attach(label, x, y, 2) --index is 2 so it doesn't collide with the textboxes which are 3
     end
     local function defaultNum(item, key, val, x, y, w, h, window)
@@ -52,78 +52,87 @@ function mod:Init()
         local label = graphics:NewEditableText(0, 0, w/2, h)
         label.Settings.NumberOnly = true
         label.Settings.RoundNumber = 2
+        label.OnCompletion = function()
+            item.Stats.Dict[key] = tonumber(label.Text)
+        end
         label.Text = tostring(val)
-        label:SetColours(.35, .35, .35)
+        label:SetColours(unpack(Colours.WindowUI.NormalField))
         window:Attach(label, x + w/2, y, 3)
     end
-    local function defaultDir(item, val, x, y, w, h, window, first, second, third) --default direction value function
+    local function defaultDir(item, key, val, x, y, w, h, window, first, second, third) --default direction value function
         local button = graphics:NewText(0, 0, w/2, h)
         button.Text = val
         button.Collision.OnClick = function()
             button.Text = third and (button.Text == first and second or button.Text == second and third or first) or (button.Text == first and second or first) --cycle through the phases
             if third then
                 if button.Text == first then --update the colours
-                    button:SetColours(.45, .45, .45)
+                    button:SetColours(unpack(Colours.WindowUI.TrippleOptionField1))
                 elseif button.Text == second then
-                    button:SetColours(.6, .2, 0)
+                    button:SetColours(unpack(Colours.WindowUI.TrippleOptionField2))
                 else
-                    button:SetColours(0, .3, .6)
+                    button:SetColours(unpack(Colours.WindowUI.TrippleOptionField3))
                 end
             elseif button.Text == first then
-                button:SetColours(.6, 0, 0)
+                button:SetColours(unpack(Colours.WindowUI.DoubleOptionField1))
             else
-                button:SetColours(0, .6, .6)
+                button:SetColours(unpack(Colours.WindowUI.DoubleOptionField2))
             end
         end
         if third then
             if button.Text == first then --update the colours
-                button:SetColours(.45, .45, .45)
+                button:SetColours(unpack(Colours.WindowUI.TrippleOptionField1))
             elseif button.Text == second then
-                button:SetColours(.6, .2, 0)
+                button:SetColours(unpack(Colours.WindowUI.TrippleOptionField2))
             else
-                button:SetColours(0, .3, .6)
+                button:SetColours(unpack(Colours.WindowUI.TrippleOptionField3))
             end
         elseif button.Text == first then
-            button:SetColours(.6, 0, 0)
+            button:SetColours(unpack(Colours.WindowUI.DoubleOptionField1))
         else
-            button:SetColours(0, .6, .6)
+            button:SetColours(unpack(Colours.WindowUI.DoubleOptionField2))
+        end
+        button.OnCompletion = function()
+            item.Stats.Dict[key] = button.Text
         end
         window:Attach(button, x + w/2, y, 3)
     end
 
     self.DisplayForStat.ItemId = function(item, key, val, x, y, w, h, window)
-        defLabel(key, x, y, w, h, window)
+        defLabel(key, x, y, w, h, window) --make itemid changeable? idkkkk
         local label = graphics:NewEditableText(0, 0, w/2, h)
         label.Settings.ReadOnly = true
         label.Text = tostring(val)
-        label:SetColours(0, 0, 0, 0)
+        label:SetColours(unpack(Colours.WindowUI.ReadOnly))
         window:Attach(label, x + w/2, y, 3)
     end
     
-    self.DisplayForStat.Direction = function(item, key, val, x, y, w, h, window)
+    self.DisplayForStat.Direction = function(item, key, val, x, y, w, h, window) --direction textboxes
         defLabel(key, x, y, w, h, window)
-        defaultDir(item, val, x, y, w, h, window, "Both", "Left", "Right")
+        defaultDir(item, key, val, x, y, w, h, window, "Both", "Left", "Right")
     end
     self.DisplayForStat.XDirection = function(item, key, val, x, y, w, h, window)
         defLabel(key, x, y, w, h, window)
-        defaultDir(item, val, x, y, w, h, window, "none", "Left", "Right")
+        defaultDir(item, key, val, x, y, w, h, window, "none", "Left", "Right")
     end
     self.DisplayForStat.YDirection = function(item, key, val, x, y, w, h, window)
         defLabel(key, x, y, w, h, window)
-        defaultDir(item, val, x, y, w, h, window, "none", "Up", "Down")
+        defaultDir(item, key, val, x, y, w, h, window, "none", "Up", "Down")
     end
     self.DisplayForStat.RotationDirection = function(item, key, val, x, y, w, h, window)
         defLabel(key, x, y, w, h, window)
-        defaultDir(item, val, x, y, w, h, window, "Left", "Right")
+        defaultDir(item, key, val, x, y, w, h, window, "Left", "Right")
     end
 
-    self.DisplayForStat.NoDecimals = function(item, key, val, x, y, w, h, window)
+    self.DisplayForStat.NoDecimals = function(item, key, val, x, y, w, h, window) --fallback for no decimal textboxes
         defLabel(key, x, y, w, h, window)
         local label = graphics:NewEditableText(0, 0, w/2, h)
         label.Settings.NumberOnly = true
         label.Settings.RoundNumber = 0
         label.Text = tostring(math.floor(val+.5))
-        label:SetColours(.35, .35, .35)
+        label.OnCompletion = function()
+            item.Stats.Dict[key] = tonumber(label.Text)
+        end
+        label:SetColours(unpack(Colours.WindowUI.NormalField))
         window:Attach(label, x + w/2, y, 3)
     end
 
@@ -136,10 +145,34 @@ function mod:Init()
         label.Settings.Bounds.Min = 0
         label.Settings.Bounds.Max = math.huge
         label.Text = tostring(math.floor(val+.5))
-        label:SetColours(.35, .35, .35)
+        label.OnCompletion = function()
+            item.Stats.Dict[key] = tonumber(label.Text)
+        end
+        label:SetColours(unpack(Colours.WindowUI.NormalField))
         window:Attach(label, x + w/2, y, 3)
     end
     self.DisplayForStat.Length = self.DisplayForStat.Depth
+
+    self.DisplayForStat.Mirror = function(item, key, val, x, y, w, h, window)
+        defLabel(key, x, y, w, h, window)
+        local button = graphics:NewText(0, 0, w/2, h)
+        button.Text = ""
+        button.Collision.OnClick = function()
+            item.Stats.Dict[key] = item.Stats.Dict[key] == 0 and 1 or 0
+            if item.Stats.Dict[key] == 1 then
+                button:SetColours(unpack(Colours.Standard.BoolYes))
+            else
+                button:SetColours(unpack(Colours.Standard.BoolNo))
+            end
+        end
+        if val == 1 then
+            button:SetColours(unpack(Colours.Standard.BoolYes))
+        else
+            button:SetColours(unpack(Colours.Standard.BoolNo))
+        end
+        window:Attach(button, x + w/2, y, 3)
+    end
+    --self.DisplayForStat["Touch&Go"]
 
     self.DisplayForStat.Unknown = self.DisplayForStat.ItemId
     self.DisplayForStat.Default = defaultNum
@@ -205,8 +238,7 @@ function mod:New(id, x, y) --create new
                 local basic = graphics:NewText(0, 0, window.W - 4, 59)
                 basic.Text = "  Basic Attributes"
                 basic:SetFont("InconsolataBold", 16)
-                print(basic.SizePerCharacter.H)
-                basic:SetColours(.25, .25, .25)
+                basic:SetColours(unpack(Colours.WindowUI.Tab))
                 basic.AnchorX, basic.AnchorY = 0, 0
                 window:Attach(basic, 2, 18)
                 self.DisplayForStat.ItemId(item, "ItemId", item.Stats.Dict.ItemId, 0, 41, (window.W - 4)/2, 16, window)
@@ -246,7 +278,7 @@ function mod:New(id, x, y) --create new
                     local specific = graphics:NewText(0, 0, window.W - 4, math.ceil(offsetS/2) * 18 + 23)
                     specific.Text = "  Advanced Settings"
                     specific:SetFont("InconsolataBold", 16)
-                    specific:SetColours(.25, .25, .25)
+                    specific:SetColours(unpack(Colours.WindowUI.Tab))
                     specific.AnchorX, basic.AnchorY = 0, 0
                     window:Attach(specific, 2, 79)
                     height = height + math.ceil(offsetS/2) * 18 + 25
@@ -255,7 +287,7 @@ function mod:New(id, x, y) --create new
                     local appear = graphics:NewText(0, 0, window.W - 4, math.ceil(offsetA/2) * 18 + 23)
                     appear.Text = "  Appearance"
                     appear:SetFont("InconsolataBold", 16)
-                    appear:SetColours(.25, .25, .25)
+                    appear:SetColours(unpack(Colours.WindowUI.Tab))
                     appear.AnchorX, basic.AnchorY = 0, 0
                     window:Attach(appear, 2, math.ceil(offsetS/2) * 18 + 81 + (offsetS ~= 0 and 23 or -2))
                     height = height + math.ceil(offsetA/2) * 18 + 25
