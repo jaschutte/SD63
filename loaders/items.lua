@@ -27,7 +27,7 @@ function mod:Init()
         ["45"] = {Stats = {0, 100, 100, 64, 92, 0, 0, 0}; Desc = {"Angle", "X Scale", "Y Scale", "On Wait", "Off Wait", "Disabled", "Offset", "Start Off"};};
         ["71"] = {Stats = {"Both", 0, 3, 100, 0, 1, 0}; Desc = {"Direction", "Angle", "Speed", "Wait", "Offset", "Color", "Chase"};};
         ["73"] = {
-            Stats = {math.random(1,4) == 1 and "H0i I'm temmie!", math.random(1,3) == 1 and "How is your day sir?", math.random(1,2) == 1 and "This is a sign. It's quite a boring one I would say." or "Hey don't paste mods in here! I'm a SIGN! Not a mod loader!"};
+            Stats = {math.random(1,4) == 1 and "H0i I'm temmie!" or math.random(1,3) == 1 and "How is your day sir?" or math.random(1,2) == 1 and "This is a sign. It's quite a boring one I would say." or "Hey don't paste mods in here! I'm a SIGN! Not a mod loader!"};
             Desc = {"Text"};
         };
         ["74"] = {Stats = {20}; Desc = {"Duration"};};
@@ -44,6 +44,10 @@ function mod:Init()
     local function defLabel(key, x, y, w, h, window)
         local label = graphics:NewText(0, 0, w/2, h)
         label.Text = key:gsub("%u", function(c) return " "..c end)
+        label:SetHint(true, label.Text)
+        if #label.Text >= 14 then
+            label.Text = label.Text:sub(1, 12)..".."
+        end
         label:SetColours(unpack(Colours.WindowUI.ReadOnly))
         window:Attach(label, x, y, 2) --index is 2 so it doesn't collide with the textboxes which are 3
     end
@@ -172,7 +176,7 @@ function mod:Init()
         end
         window:Attach(button, x + w/2, y, 3)
     end
-    --self.DisplayForStat["Touch&Go"]
+    self.DisplayForStat["Touch&Go"] = self.DisplayForStat.Mirror
 
     self.DisplayForStat.Unknown = self.DisplayForStat.ItemId
     self.DisplayForStat.Default = defaultNum
@@ -233,7 +237,7 @@ function mod:New(id, x, y) --create new
             if now-item._LastPressed ~= 0 and now-item._LastPressed <= 0.3 then --0.3 is the max time between the double click
                 --open tab
                 local window = windows:NewWindow(ToolSettings.MouseX, ToolSettings.MouseY)
-                window:Resize(550, 300)
+                window:Resize(400, 300)
                 --basic textboxes
                 local basic = graphics:NewText(0, 0, window.W - 4, 59)
                 basic.Text = "  Basic Attributes"

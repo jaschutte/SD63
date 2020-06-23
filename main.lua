@@ -98,6 +98,8 @@ _G.Colours = { --was planning to make a metatable out of this so it automaticly 
     Standard = {
         BoolYes = {0, .5, 0};
         BoolNo = {.5, 0, 0};
+        HintColour = {0, 0, 0, .5};
+        HintTextColour = {.8, .8, .8};
     };
     WindowUI = {
         TopBar = {.2, .2, .2};

@@ -303,6 +303,10 @@ function mod:NewText(x,y,w,h,z,layer,ax,ay)
     obj.SizePerCharacter = {W = obj.Font:getWidth(" "), H = obj.Font:getHeight(" ")}
     obj.TextOffsetX = 0
     obj.TextOffsetY = 0
+    obj.Hint = {
+        Enabled = false;
+        Obj = nil;
+    }
     obj._Lines = {}
     obj.TextSelection = {
         Start = 0;
@@ -313,6 +317,66 @@ function mod:NewText(x,y,w,h,z,layer,ax,ay)
         A = 0.5;
         _Draw = {};
     }
+    function obj:SetHint(enabled, hint)
+        self.Hint.Enabled = enabled or self.Hint.Enabled
+        hint = hint or ""
+        if self.Hint.Enabled then --yes I'm creating a textlabel in a textlabel
+            hint = hint.." " --add a space so it looks prettier
+            self.Hint.Obj = mod:NewText(
+                0, 0,
+                self.Font:getWidth(hint), self.Font:getHeight(hint),
+                self.Z + 9999, "Menu"
+            )
+            self.Hint.Obj.Text = hint
+            self.Hint.Obj:SetColours(unpack(Colours.Standard.HintColour))
+            self.Hint.Obj.FontColour = {
+                R = Colours.Standard.HintTextColour[1] or 0;
+                G = Colours.Standard.HintTextColour[2] or 0;
+                B = Colours.Standard.HintTextColour[3] or 0;
+                A = Colours.Standard.HintTextColour[4] or 1;
+            }
+            self.Hint.Obj.ScreenPosition = true
+            self.Hint.Obj.ApplyZoom = false
+            self.Collision.DetectHover = true
+            self.Collision.OnEnter = function()
+                if self.Hint.ThreadId then --if there's still an active thread remove it
+                    threads:RemoveThread(self.Hint.ThreadId)
+                    self.Hint.ThreadId = nil
+                end
+                self.Hint.ThreadId = threads:NewThread(function(self) --create a new thread
+                    while true do
+                        local x, y = ToolSettings.MouseX, ToolSettings.MouseY
+                        threads:Wait(.5)
+                        if x == ToolSettings.MouseX and y == ToolSettings.MouseY then
+                            if self and self.Hint and self.Hint.Obj then
+                                if self:CheckCollision(ToolSettings.MouseX, ToolSettings.MouseY) then
+                                    self.Hint.Obj:Move(ToolSettings.MouseX, ToolSettings.MouseY - self.Hint.Obj.H)
+                                    self.Hint.Obj.Visible = true
+                                end
+                            end
+                        elseif self.Hint.Obj.Visible then --if mouse moved, make the hint invisible
+                            self.Hint.Obj.Visible = false
+                        end
+                    end
+                end, self)
+                threads:StartThread(self.Hint.ThreadId) --don't forget to start the thread lol
+            end
+            self.Collision.OnLeave = function()
+                if self and self.Hint and self.Hint.Obj then --if the object still exists
+                    if self.Hint.ThreadId then --if there's still an thread active, REMOVE IT
+                        threads:RemoveThread(self.Hint.ThreadId)
+                        self.Hint.ThreadId = nil
+                    end
+                    self.Hint.Obj.Visible = false
+                end
+            end
+            self.AponDeletion[GetId()] = function()
+                if self and self.Hint and self.Hint.Obj then
+                    self.Hint.Obj:Destroy()
+                end
+            end
+        end
+    end
     function obj:SetSelection(s, e) --if the text changes this must be changed as well, THIS ISN'T AUTOMATIC!
         --broken, fix this later, not now
     end
@@ -352,7 +416,7 @@ function mod:NewText(x,y,w,h,z,layer,ax,ay)
         local to = self.Text:sub(pos + 1)
         self.Text = from..str..to
     end
-    function obj:Draw()
+    function obj:Draw() --override the draw command
         drawFunc(self)
         love.graphics.setFont(self.Font)
         love.graphics.setScissor(self.X, self.Y, self.W, self.H)
