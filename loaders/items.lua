@@ -15,8 +15,8 @@ function mod:Init()
     --create the list for item initialization
     local global = {
         ["1"] = {Stats = {0, 0, "Right"};Desc = {"X Speed", "Y Speed", "Direction"};};
-        ["7"] = {Stats = {3, 0, 30, 0, 0, 0, "Right", "none", 0.5, 1, 0, 25}; Desc = {"X Speed", "Y Speed", "X Length", "Y Length", "X Offset", "Y Offset", "X Direction", "Y Direction", "Acceleration", "Size", "Touch & Go", "Count"};};
-        ["8"] = {Stats = {2, 2, 50, 0, 1}; Desc = {"X Speed", "Y Speed", "Platform Count", "Radius", "Offset", "Size"};};
+        ["7"] = {Stats = {4, 0, 30, 0, 0, 0, "Right", "none", 0.5, 1, 0, 25}; Desc = {"X Speed", "Y Speed", "X Length", "Y Length", "X Offset", "Y Offset", "X Direction", "Y Direction", "Acceleration", "Platform Size", "Touch & Go", "Count"};};
+        ["8"] = {Stats = {2, 2, 50, 0, 1}; Desc = {"Speed", "Platform Count", "Radius", "Offset", "Platform Size"};};
         ["9"] = {
             Stats = {0, 0, 0, 0, 0, 0, "Right", "none", 0.5, 80, 1, "Left", 3, 72, 1};
             Desc = {"X Speed", "Y Speed", "X Length", "Y Length", "X Offset", "Y Offset", "X Direction", "Y Direction", "Acceleration", "Size", "Block Type", "Rotation Direction", "Rotation Speed", "Wait Time", "Unknown"};
@@ -50,6 +50,7 @@ function mod:Init()
         end
         label:SetColours(unpack(Colours.WindowUI.ReadOnly))
         window:Attach(label, x, y, 2) --index is 2 so it doesn't collide with the textboxes which are 3
+        return label
     end
     local function defaultNum(item, key, val, x, y, w, h, window)
         defLabel(key, x, y, w, h, window)
@@ -62,6 +63,7 @@ function mod:Init()
         label.Text = tostring(val)
         label:SetColours(unpack(Colours.WindowUI.NormalField))
         window:Attach(label, x + w/2, y, 3)
+        return label
     end
     local function defaultDir(item, key, val, x, y, w, h, window, first, second, third) --default direction value function
         local button = graphics:NewText(0, 0, w/2, h)
@@ -99,8 +101,34 @@ function mod:Init()
             item.Stats.Dict[key] = button.Text
         end
         window:Attach(button, x + w/2, y, 3)
+        return button
+    end
+    local function addSub(item, key, x, y, w, h, valbox, window, inc, min, max) --a default for adding + / - button at the end of a textbox
+        min, max = min or -math.huge, max or math.huge
+        local add = graphics:NewFrame(0, 0, h, h/2)
+        add.AnchorX, add.AnchorY = 0, 0
+        add:SetImage(Textures.MenuTextures.Add)
+        add.Collision.DetectHover = true
+        add.Collision.OnClick = function()
+            valbox.Text = tostring(math.min(max, tonumber(valbox.Text) + inc))
+            item.Stats.Dict[key] = tonumber(valbox.Text)
+        end
+        add.FitImageInsideWH = true
+        window:Attach(add, x + w - h, y, 3)
+        local sub = graphics:NewFrame(0, 0, h, h/2)
+        sub.AnchorX, sub.AnchorY = 0, 0
+        sub:SetImage(Textures.MenuTextures.Subtract)
+        sub.Collision.DetectHover = true
+        sub.Collision.OnClick = function()
+            valbox.Text = tostring(math.max(min, tonumber(valbox.Text) - inc))
+            item.Stats.Dict[key] = tonumber(valbox.Text)
+        end
+        sub.FitImageInsideWH = true
+        window:Attach(sub, x + w - h, y + h/2, 3)
+        return add, sub
     end
 
+    --some standard functions
     self.DisplayForStat.ItemId = function(item, key, val, x, y, w, h, window)
         defLabel(key, x, y, w, h, window) --make itemid changeable? idkkkk
         local label = graphics:NewEditableText(0, 0, w/2, h)
@@ -109,7 +137,21 @@ function mod:Init()
         label:SetColours(unpack(Colours.WindowUI.ReadOnly))
         window:Attach(label, x + w/2, y, 3)
     end
+    self.DisplayForStat.NoDecimals = function(item, key, val, x, y, w, h, window) --fallback for no decimal textboxes
+        defLabel(key, x, y, w, h, window)
+        local label = graphics:NewEditableText(0, 0, w/2 - h, h)
+        label.Settings.NumberOnly = true
+        label.Settings.RoundNumber = 0
+        label.Text = tostring(math.floor(val+.5))
+        label.OnCompletion = function()
+            item.Stats.Dict[key] = tonumber(label.Text)
+        end
+        label:SetColours(unpack(Colours.WindowUI.NormalField))
+        window:Attach(label, x + w/2, y, 3)
+        addSub(item, key, x, y, w, h, label, window, 1)
+    end
     
+    --directions
     self.DisplayForStat.Direction = function(item, key, val, x, y, w, h, window) --direction textboxes
         defLabel(key, x, y, w, h, window)
         defaultDir(item, key, val, x, y, w, h, window, "Both", "Left", "Right")
@@ -127,22 +169,10 @@ function mod:Init()
         defaultDir(item, key, val, x, y, w, h, window, "Left", "Right")
     end
 
-    self.DisplayForStat.NoDecimals = function(item, key, val, x, y, w, h, window) --fallback for no decimal textboxes
-        defLabel(key, x, y, w, h, window)
-        local label = graphics:NewEditableText(0, 0, w/2, h)
-        label.Settings.NumberOnly = true
-        label.Settings.RoundNumber = 0
-        label.Text = tostring(math.floor(val+.5))
-        label.OnCompletion = function()
-            item.Stats.Dict[key] = tonumber(label.Text)
-        end
-        label:SetColours(unpack(Colours.WindowUI.NormalField))
-        window:Attach(label, x + w/2, y, 3)
-    end
-
+    --water
     self.DisplayForStat.Depth = function(item, key, val, x, y, w, h, window)
         defLabel(key, x, y, w, h, window)
-        local label = graphics:NewEditableText(0, 0, w/2, h)
+        local label = graphics:NewEditableText(0, 0, w/2 - h, h)
         label.Settings.NumberOnly = true
         label.Settings.RoundNumber = 0
         label.Settings.Bounds.Enabled = true
@@ -154,9 +184,137 @@ function mod:Init()
         end
         label:SetColours(unpack(Colours.WindowUI.NormalField))
         window:Attach(label, x + w/2, y, 3)
+        addSub(item, key, x, y, w, h, label, window, 16, 0)
     end
     self.DisplayForStat.Length = self.DisplayForStat.Depth
+    
+    --speed & length & size
+    self.DisplayForStat.XSpeed = function(item, key, val, x, y, w, h, window)
+        defLabel(key, x, y, w, h, window)
+        local label = graphics:NewEditableText(0, 0, w/2 - h, h)
+        label.Settings.NumberOnly = true
+        label.Settings.RoundNumber = 1
+        label.Text = tostring(math.floor(val+.5))
+        label.OnCompletion = function()
+            item.Stats.Dict[key] = tonumber(label.Text)
+        end
+        label:SetColours(unpack(Colours.WindowUI.NormalField))
+        window:Attach(label, x + w/2, y, 3)
+        addSub(item, key, x, y, w, h, label, window, 2)
+    end
+    self.DisplayForStat.YSpeed = self.DisplayForStat.XSpeed
+    self.DisplayForStat.XLength = function(item, key, val, x, y, w, h, window)
+        defLabel(key, x, y, w, h, window)
+        local label = graphics:NewEditableText(0, 0, w/2 - h, h)
+        label.Settings.NumberOnly = true
+        label.Settings.RoundNumber = 1
+        label.Settings.Bounds.Enabled = true
+        label.Settings.Bounds.Min = 0
+        label.Settings.Bounds.Max = math.huge
+        label.Text = tostring(math.floor(val+.5))
+        label.OnCompletion = function()
+            item.Stats.Dict[key] = tonumber(label.Text)
+        end
+        label:SetColours(unpack(Colours.WindowUI.NormalField))
+        window:Attach(label, x + w/2, y, 3)
+        addSub(item, key, x, y, w, h, label, window, 8, 0)
+    end
+    self.DisplayForStat.YLength = self.DisplayForStat.XLength
+    self.DisplayForStat.Size = self.DisplayForStat.XLength
 
+    --frame & color & blocktype & platform size
+    self.DisplayForStat.Frame = function(item, key, val, x, y, w, h, window)
+        defLabel(key, x, y, w, h, window)
+        local label = graphics:NewEditableText(0, 0, w/2 - h, h)
+        label.Settings.NumberOnly = true
+        label.Settings.RoundNumber = 0
+        label.Settings.Bounds.Enabled = true
+        label.Settings.Bounds.Min = 1
+        label.Settings.Bounds.Max = 6
+        label.Text = tostring(math.floor(val+.5))
+        label.OnCompletion = function()
+            item.Stats.Dict[key] = tonumber(label.Text)
+        end
+        label:SetColours(unpack(Colours.WindowUI.NormalField))
+        window:Attach(label, x + w/2, y, 3)
+        addSub(item, key, x, y, w, h, label, window, 1, 1, 6)
+    end
+    self.DisplayForStat.BlockType = function(item, key, val, x, y, w, h, window)
+        defLabel(key, x, y, w, h, window)
+        local label = graphics:NewEditableText(0, 0, w/2 - h, h)
+        label.Settings.NumberOnly = true
+        label.Settings.RoundNumber = 0
+        label.Settings.Bounds.Enabled = true
+        label.Settings.Bounds.Min = 1
+        label.Settings.Bounds.Max = 31
+        label.Text = tostring(math.floor(val+.5))
+        label.OnCompletion = function()
+            item.Stats.Dict[key] = tonumber(label.Text)
+        end
+        label:SetColours(unpack(Colours.WindowUI.NormalField))
+        window:Attach(label, x + w/2, y, 3)
+        addSub(item, key, x, y, w, h, label, window, 1, 1, 31)
+    end
+    self.DisplayForStat.Color = function(item, key, val, x, y, w, h, window)
+        defLabel(key, x, y, w, h, window)
+        local label = graphics:NewEditableText(0, 0, w/2 - h, h)
+        label.Settings.NumberOnly = true
+        label.Settings.RoundNumber = 0
+        label.Settings.Bounds.Enabled = true
+        label.Settings.Bounds.Min = 1
+        label.Settings.Bounds.Max = 9
+        label.Text = tostring(math.floor(val+.5))
+        label.OnCompletion = function()
+            item.Stats.Dict[key] = tonumber(label.Text)
+        end
+        label:SetColours(unpack(Colours.WindowUI.NormalField))
+        window:Attach(label, x + w/2, y, 3)
+        addSub(item, key, x, y, w, h, label, window, 1, 1, 9)
+    end
+    self.DisplayForStat.PlatformSize = function(item, key, val, x, y, w, h, window)
+        defLabel(key, x, y, w, h, window)
+        local label = graphics:NewEditableText(0, 0, w/2 - h, h)
+        label.Settings.NumberOnly = true
+        label.Settings.RoundNumber = 0
+        label.Settings.Bounds.Enabled = true
+        label.Settings.Bounds.Min = 1
+        label.Settings.Bounds.Max = 3
+        label.Text = tostring(math.floor(val+.5))
+        label.OnCompletion = function()
+            item.Stats.Dict[key] = tonumber(label.Text)
+        end
+        label:SetColours(unpack(Colours.WindowUI.NormalField))
+        window:Attach(label, x + w/2, y, 3)
+        addSub(item, key, x, y, w, h, label, window, 1, 1, 3)
+    end
+
+    --angle & mirror and a lot of other bools
+    self.DisplayForStat.Angle = function(item, key, val, x, y, w, h, window)
+        defLabel(key, x, y, w, h, window)
+        local label = graphics:NewEditableText(0, 0, w/2 - h, h)
+        label.Settings.NumberOnly = true
+        label.Settings.RoundNumber = 0
+        label.Settings.Bounds.Enabled = true
+        label.Settings.Bounds.Min = 0
+        label.Settings.Bounds.Max = 360
+        label.Text = tostring(math.floor(val+.5))
+        label.OnCompletion = function()
+            item.Stats.Dict[key] = tonumber(label.Text)
+        end
+        label:SetColours(unpack(Colours.WindowUI.NormalField))
+        window:Attach(label, x + w/2, y, 3)
+        local add, sub = addSub(item, key, x, y, w, h, label, window, 5, 0, 360)
+        add.Collision.OnClick = function()
+            local res = tonumber(label.Text) + 5
+            label.Text = tostring(res >= 360 and res - 360 or res)
+            item.Stats.Dict[key] = tonumber(label.Text)
+        end
+        sub.Collision.OnClick = function()
+            local res = tonumber(label.Text) - 5 --calculate the result
+            label.Text = tostring(res < 0 and 360 + res or res)
+            item.Stats.Dict[key] = tonumber(label.Text)
+        end
+    end
     self.DisplayForStat.Mirror = function(item, key, val, x, y, w, h, window)
         defLabel(key, x, y, w, h, window)
         local button = graphics:NewText(0, 0, w/2, h)
@@ -177,6 +335,11 @@ function mod:Init()
         window:Attach(button, x + w/2, y, 3)
     end
     self.DisplayForStat["Touch&Go"] = self.DisplayForStat.Mirror
+    self.DisplayForStat.Chase = self.DisplayForStat.Mirror
+    self.DisplayForStat.Disabled = self.DisplayForStat.Mirror
+    self.DisplayForStat.StartOff = self.DisplayForStat.Mirror
+
+    self.DisplayForStat.Offset = self.DisplayForStat.NoDecimals
 
     self.DisplayForStat.Unknown = self.DisplayForStat.ItemId
     self.DisplayForStat.Default = defaultNum
