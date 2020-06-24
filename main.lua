@@ -225,6 +225,9 @@ function love.load()
     end
     LD.Level.Size = {X = 50, Y = 30}
     menu:InitMenu()
+    --[[for i = 1,2000 do --a fun little test
+        items:New(math.random(1, 40), math.random(1, 1028), math.random(1, 1028))
+    end--]]
 end
 
 function love.resize(sx,sy)

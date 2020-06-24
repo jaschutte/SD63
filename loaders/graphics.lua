@@ -11,6 +11,18 @@ mod.DrawHoverTile = false
 mod.DrawTileSelection = false
 mod.TotalFrames = 0
 mod._RECALC_ON_SCRN_EVERY = 20
+--mod.ItemSpriteBatch = love.graphics.newSpriteBatch() --group all items in here maybe?
+
+--[[
+    Add a scrollbar class;
+    properties:
+        ScrollW = W;
+        ScrollH = H;
+        ScrollUpDown = true;
+        ScrollLeftRight = false;
+    functions:
+        :Influence(frame) --the influenced frame moves with the scrollbar
+]]
 
 local function clamp(x,y,z) --limit x between y and z
     return (x > y and x or y) < z and (x > y and x or y) or z
@@ -31,7 +43,7 @@ local function drawFunc(obj) --fixed it yeya
                 obj.Clips.H
             )
         end
-        local x, y, w, h = obj:ToScreenPixels()
+        local x, y, w, h = obj:ToScreenPixels() --uses anchoring by default
         if obj.ImageData.Image then
             local sX, sY = obj.ApplyZoom and CameraPosition.Z or 1, obj.ApplyZoom and CameraPosition.Z or 1
             if obj.KeepBackground then
@@ -42,7 +54,11 @@ local function drawFunc(obj) --fixed it yeya
             if obj.FitImageInsideWH then
                 sX, sY = sX * obj.ImageData.ScaleX, sY * obj.ImageData.ScaleY
             end
-            love.graphics.draw(obj.ImageData.Image, x, y, obj.R, sX, sY)
+            if obj.Mirror then
+                sX = sX * -1
+            end
+            x, y = obj:ToScreenPixels(true)
+            love.graphics.draw(obj.ImageData.Image, x, y, obj.R, sX, sY, obj.AnchorX * obj.ImageData.W, obj.AnchorY * obj.ImageData.H)
         else
             love.graphics.rectangle("fill", x, y, w, h)
         end
@@ -164,7 +180,8 @@ function mod:NewFrame(x,y,w,h,z,layer,ax,ay)
     obj.W = w or 0
     obj.H = h or 0
     obj.Z = z or 0
-    obj.Layer = layer or "b"
+    obj.Layer = layer or "r"
+    obj.Mirror = false
     obj.R = 0
     obj.AnchorX = ax or 0.5
     obj.AnchorY = ay or 0.5

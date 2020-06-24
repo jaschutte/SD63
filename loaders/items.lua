@@ -9,7 +9,7 @@ mod.NamesForId = {
     [1] = "Spawn"; [2] = "Coin"; [3] = "Red Coin"; [4] = "Blue Coin"; [5] = "Silver Star"; [6] = "Shrine"; [7] = "Green Platform"; [8] = "Rotating Green Platforms"; [9] = "Rotating Square";
     [10] = "Node"; [11] = "Falling Node";
 }
-mod.Appearance = {Mirror = true, Angle = true, Color = true, Frame = true, BlockType = true, Size = true, Depth = true, Length = true}
+mod.Appearance = {ZIndex = true, Layer = true, PlatformSize = true, Mirror = true, Angle = true, Color = true, Frame = true, BlockType = true, Size = true, Depth = true, Length = true}
 
 function mod:Init()
     --create the list for item initialization
@@ -197,6 +197,34 @@ function mod:Init()
     self.DisplayForStat.RotationDirection = function(item, key, val, x, y, w, h, window)
         defLabel(key, x, y, w, h, window)
         defaultDir(item, key, val, x, y, w, h, window, "Left", "Right")
+    end
+    
+    --layer & z index
+    self.DisplayForStat.Layer = function(item, key, val, x, y, w, h, window)
+        defLabel(key, x, y, w, h, window)
+        defaultDir(item, key, val, x, y, w, h, window, "Mixed", "Front", "Back")
+    end
+    self.DisplayForStat.ZIndex = function(item, key, val, x, y, w, h, window)
+        defLabel(key, x, y, w, h, window)
+        local label = graphics:NewEditableText(0, 0, w/2 - h, h)
+        label.Settings.NumberOnly = true
+        label.Settings.RoundNumber = 0
+        label.Settings.Bounds.Enabled = true
+        label.Settings.Bounds.Max = math.huge
+        label.Settings.Bounds.Min = 1
+        label.Text = tostring(math.floor(val+.5))
+        label.OnCompletion = function()
+            item.Stats.Dict[key] = tonumber(label.Text)
+        end
+        label:SetColours(unpack(Colours.WindowUI.NormalField))
+        label.FontColour = {
+            R = Colours.WindowUI.NormalTextColour[1] or 0,
+            G = Colours.WindowUI.NormalTextColour[2] or 0,
+            B = Colours.WindowUI.NormalTextColour[3] or 0,
+            A = Colours.WindowUI.NormalTextColour[4] or 1;
+        }
+        window:Attach(label, x + w/2, y, 3)
+        addSub(item, key, x, y, w, h, label, window, 1, 1)
     end
 
     --water
@@ -417,6 +445,8 @@ function mod:Init()
     self.DisplayForStat.Disabled = self.DisplayForStat.Mirror
     self.DisplayForStat.StartOff = self.DisplayForStat.Mirror
 
+    self.DisplayForStat.DisableAI = self.DisplayForStat.Mirror --disable AI
+
     self.DisplayForStat.Offset = self.DisplayForStat.NoDecimals
 
     self.DisplayForStat.Unknown = self.DisplayForStat.ItemId
@@ -426,30 +456,67 @@ end
 function mod:GetStats(item)
     --39 & 40 [4][5] = X, Y
     local stats = {
-        Stats = {item.ItemId, item.Frame.X, item.Frame.Y};
-        Desc = {"Item Id", "X", "Y"};
+        Stats = {item.ItemId, item.Frame.X, item.Frame.Y, 0, item.Frame.Z, item.Frame.Layer};
+        Desc = {"Item Id", "X", "Y", "Disable AI", "Z Index", "Layer"};
     }
+    local l = #stats.Desc --get the length for the offset
     local special = self.SpecialStats[tostring(item.ItemId)]
     if special then --if there are special stats, add them here
         for i,val in ipairs(special.Stats) do
-            stats.Stats[i+3] = val
-            stats.Desc[i+3] = special.Desc[i]
+            stats.Stats[i+l] = val
+            stats.Desc[i+l] = special.Desc[i]
         end
         if item.ItemId == 39 or item.ItemId == 40 then
-            stats.Stats[4] = item.Frame.X
-            stats.Stats[5] = item.Frame.Y
+            stats.Stats[1+l] = item.Frame.X
+            stats.Stats[2+l] = item.Frame.Y
         end
     end
-    stats.Dict = {}
+    local dict = {}
     for i,val in ipairs(stats.Stats) do --create a dictionary instead of an array
         local key = stats.Desc[i]
         if key then
             key = key:gsub(" ","") --remove all spaces, to re-add them is simple, key:gsub("%u", function(c) return " "..c end)
             stats.Desc[i] = key
-            stats.Dict[key] = val
+            dict[key] = val
+        end
+    end
+    stats.Dict = setmetatable({},{ --create a metatable so it automaticly applies the changes
+        __index = function(_, key)
+            return dict[key]
+        end;
+        __newindex = function(_, key, val)
+            dict[key] = val
+            if key == "X" then
+                item.Frame:Move(val, item.Frame.Y)
+            elseif key == "Y" then
+                item.Frame:Move(item.Frame.X, val)
+            elseif key == "Size" then
+                item.Frame:Resize(stats.Dict.Size, stats.Dict.Size)
+            elseif key == "Angle" then
+                item.Frame.R = val / 180 * math.pi
+            elseif key == "Mirror" then
+                item.Frame.Mirror = val == 1
+            elseif key == "ZIndex" then --can't combined layer and index into one due to we not knowing the index of either
+                item.Frame:ChangeZ(val)
+            elseif key == "Layer" then
+                item.Frame:ChangeZ(nil, val == "Mixed" and "r" or val == "Front" and "f" or "b")
+            end
+        end
+    })
+    for i,val in ipairs(stats.Stats) do
+        local key = stats.Desc[i]
+        if key then
+            key = key:gsub(" ","")
+            stats.Dict[key] = val --invoke all of the metaevents so it updated once placed
         end
     end
     stats.Stats = nil --remove the old stats table
+
+    if item.ItemId == 9 then --if the item is rotating square make it fit between the sizes
+        item.Frame:Resize(stats.Dict.Size, stats.Dict.Size)
+        item.Frame.FitImageInsideWH = true
+    end
+
     return stats
 end
 
@@ -461,10 +528,9 @@ function mod:New(id, x, y) --create new
     local item = {}
     item.Id = GetId()
     item.ItemId = id
-    item.Frame = graphics:NewFrame(x, y) --create the frame for the item (including img)
+    item.Frame = graphics:NewFrame(x, y, nil, nil, 1) --create the frame for the item (including img)
     item.Frame:SetImage(Textures.ItemTextures[id])
     item.Frame:Resize(item.Frame.ImageData.W, item.Frame.ImageData.H)
-    item.Frame.IS_ITEM = item.ItemId
     item.Frame.Visible = true
     item.IsBeingDragged = false
     item.LastLocation = {X = 0, Y = 0}
@@ -493,12 +559,14 @@ function mod:New(id, x, y) --create new
                 basic.AnchorX, basic.AnchorY = 0, 0
                 window:Attach(basic, 2, 18)
                 self.DisplayForStat.ItemId(item, "ItemId", item.Stats.Dict.ItemId, 0, 41, (window.W - 4)/2, 16, window)
+                self.DisplayForStat.DisableAI(item, "DisableAI", item.Stats.Dict.DisableAI, (window.W - 4)/2, 41, (window.W - 4)/2, 16, window)
                 self.DisplayForStat.NoDecimals(item, "X", item.Stats.Dict.X, 0, 59, (window.W - 4)/2, 16, window)
                 self.DisplayForStat.NoDecimals(item, "Y", item.Stats.Dict.Y, (window.W - 4)/2, 59, (window.W - 4)/2, 16, window)
                 
                 local offsetS, offsetA = 0, 0 --place "advanced" textboxes
+                local IgnoreOffset = 5 --any stat below this is not drawn automaticly
                 for i,key in ipairs(item.Stats.Desc) do
-                    if i >= 4 then
+                    if i >= IgnoreOffset then
                         if not self.Appearance[key] then
                             offsetS = offsetS + 1
                         else
@@ -508,7 +576,7 @@ function mod:New(id, x, y) --create new
                 end
                 local _a, _s = 0, 0
                 for i,key in ipairs(item.Stats.Desc) do
-                    if i >= 4 then
+                    if i >= IgnoreOffset then
                         local offset, yOff
                         if self.Appearance[key] then
                             offset = _a; _a = _a + 1

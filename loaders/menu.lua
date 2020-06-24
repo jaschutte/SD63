@@ -26,11 +26,6 @@ function mod:GenerateHUD(x,y,tile)
         y = y - 82
     end
     x, y = x + 40, y + 40
-    local fr = graphics:NewFrame(x, y, 172, 36, 2, "Menu")
-    fr.AnchorX, fr.AnchorY = 0, 0
-    fr:SetColours(1,1,1,0.5)
-    fr.ScreenPosition = false
-    fr.Visible = true
     mod.HUD.Background = graphics:NewFrame(x,y,172,36,3,"Menu")
     mod.HUD.Background.AnchorX, mod.HUD.Background.AnchorY = 0, 0
     mod.HUD.Background:SetColours(.11,.11,.11)
@@ -44,7 +39,7 @@ function mod:GenerateHUD(x,y,tile)
     mod.HUD.Close.Collision.DetectHover = true
     mod.HUD.Close.ScreenPosition = false
     mod.HUD.Close.Visible = true
-    mod.HUD.Move = graphics:NewFrame(x+52,y+18,32,32,4,"Menu")
+    mod.HUD.Move = graphics:NewFrame(x+52,y+18,32,32,4,"Menu") --make this a button instead of a dragging icon
     mod.HUD.Move:SetImage(Textures.HUDTextures.genericMove)
     mod.HUD.Move.Collision.DetectHover = true
     mod.HUD.Move.ScreenPosition = false
