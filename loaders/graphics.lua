@@ -24,6 +24,24 @@ mod._RECALC_ON_SCRN_EVERY = 20
         :Influence(frame) --the influenced frame moves with the scrollbar
 ]]
 
+local function polyPoint(px, py, verts) --modified version from the one available on the love2d forums
+    local next, collision = 3, false
+    assert(#verts%2 == 0, "Not a valid polygon!")
+    for current = 1, #verts, 2 do --loop every second entry
+        next = current + 2
+        if next >= #verts then
+            next = 1
+        end
+        local vcx, vcy = verts[current], verts[current + 1] --get the coords
+        local vnx, vny = verts[next], verts[next + 1]
+        if (((vcy >= py and vny < py) or (vcy < py and vny >= py)) and
+            (px < (vnx-vcx)*(py-vcy) / (vny-vcy)+vcx)) then
+            collision = not collision
+        end
+    end
+    return collision
+end
+
 local function clamp(x,y,z) --limit x between y and z
     return (x > y and x or y) < z and (x > y and x or y) or z
 end
@@ -173,6 +191,31 @@ function mod:MassDelete(delete) --only loops FramesOnZ once for the entire list 
     mod.TotalFrames = #mod.FramesOnZ
 end
 
+function mod:KeepNonAlpha(rawText) --returns a new image with only the opaque pixels in white
+    if not rawText then
+        print("Oi we aint going to send empty images around okay? It's just a waste of space..")
+        return
+    end
+    local texture = rawText:clone()
+    texture:mapPixel(function(x, y, r, g, b, a)
+        if a == 0 then
+            return 0, 0, 0, 0
+        else
+            return 1, 1, 1, 1
+        end
+    end)
+    return texture
+end
+
+function mod:SaveCheckPixel(rawText, px, py) --savely checks what colour the pixel is on the texture
+    local c, r, g, b, a = pcall(function()
+        return rawText:getPixel(px, py)
+    end)
+    if c then --if the getPixel was performed succesfully do this:
+        return r, g, b, a
+    end
+end
+
 function mod:NewFrame(x,y,w,h,z,layer,ax,ay)
     local obj = {}
     obj.X = x or 0
@@ -229,6 +272,10 @@ function mod:NewFrame(x,y,w,h,z,layer,ax,ay)
     obj.ApplyZoom = true
     obj.ScreenPosition = false --if false it will use CameraPosition
     obj.AponDeletion = {} --invokes when this frame is being deleted, USE GETID() AS A KEY!!
+    obj.CollisionTexture = nil
+    function obj:SetCollisionTexture(rawText) --must be fed a raw texture inorder to work properly
+        self.CollisionTexture = rawText and mod:KeepNonAlpha(rawText) or nil
+    end
     function obj:SetColours(r,g,b,a,forBackground)
         if forBackground then
             obj.BackgroundColour.R = r or obj.BackgroundColour.R
@@ -243,9 +290,23 @@ function mod:NewFrame(x,y,w,h,z,layer,ax,ay)
         end
         return obj
     end
-    function obj:CheckCollision(mx,my)
+    function obj:CheckCollision(mx,my, rawCheck)
         local x,y, w,h = obj:ToScreenPixels()
-        return mx > x and mx < x+w and my > y and my < y+h
+        local isInBounds = mx > x and mx < x+w and my > y and my < y+h
+        if self.CollisionTexture and not rawCheck then --if raw check bounds alone will do
+            --local nx, ny = mx - x, my - y
+            --local succes, isOpaque = mod:SaveCheckPixel(self.CollisionTexture, nx, ny)
+            print(polyPoint(mx, my, {x, y, x + w, y, x + w, y + h, x, y + h}))
+            mod:NewFrame(
+                math.cos(self.R) * w + x,
+                math.cos(self.R) * h + y,
+                5, 5
+            ).Visible = true
+            return true
+            --return succes and isOpaque == 1
+        else
+            return isInBounds
+        end
     end
     function obj:SetImage(img)
         obj.ImageData.Image = img

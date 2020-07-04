@@ -16,6 +16,7 @@ _G.Textures = {
     HUDTextures = {};
     RawTextures = {
         Cursors = {};
+        Items = {};
     };
 }
 _G.ClickAfterEvents = {}
@@ -183,6 +184,7 @@ function love.load()
             local group = tonumber(folder)
             local num = tonumber(texture:sub(1,-5))
             Textures.ItemTextures[group + num] = love.graphics.newImage(subDir.."/"..texture)
+            Textures.RawTextures.Items[group + num] = love.image.newImageData(subDir.."/"..texture)
             Catagories.ItemCatagories[group][num] = group + num
         end
     end

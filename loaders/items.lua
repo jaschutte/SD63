@@ -1,4 +1,18 @@
 
+--[[
+    Because I'll need to look into the decompiler *alot*
+    Here's a smol list of special stuffz
+    EditorFrame = 5
+    Lines 39 - 119; lists for special items
+    Lines 391 - 437; item place hover logic
+    Lines 438 - 659; item place logic
+    
+    Platforms: DefineSprite (7722)
+    Rotating Square: DefineSprite(7734)
+    Rotating Triangle: DefineSprite(7738)
+    Frames inside of LDItem are the item (frame number = item id)
+]]
+
 local graphics = require("loaders.graphics")
 local windows = require("loaders.window")
 
@@ -62,7 +76,7 @@ function mod:Init()
         defLabel(key, x, y, w, h, window)
         local label = graphics:NewEditableText(0, 0, w/2, h)
         label.Settings.NumberOnly = true
-        label.Settings.RoundNumber = 2
+        label.Settings.RoundNumber = 0
         label.OnCompletion = function()
             item.Stats.Dict[key] = tonumber(label.Text)
         end
@@ -257,7 +271,7 @@ function mod:Init()
         defLabel(key, x, y, w, h, window)
         local label = graphics:NewEditableText(0, 0, w/2 - h, h)
         label.Settings.NumberOnly = true
-        label.Settings.RoundNumber = 1
+        label.Settings.RoundNumber = 0
         label.Text = tostring(math.floor(val+.5))
         label.OnCompletion = function()
             item.Stats.Dict[key] = tonumber(label.Text)
@@ -277,7 +291,7 @@ function mod:Init()
         defLabel(key, x, y, w, h, window)
         local label = graphics:NewEditableText(0, 0, w/2 - h, h)
         label.Settings.NumberOnly = true
-        label.Settings.RoundNumber = 1
+        label.Settings.RoundNumber = 0
         label.Settings.Bounds.Enabled = true
         label.Settings.Bounds.Min = 0
         label.Settings.Bounds.Max = math.huge
@@ -388,6 +402,28 @@ function mod:Init()
         addSub(item, key, x, y, w, h, label, window, 1, 1, 3)
     end
 
+    self.DisplayForStat.Acceleration = function(item, key, val, x, y, w, h, window)
+        defLabel(key, x, y, w, h, window)
+        local label = graphics:NewEditableText(0, 0, w/2, h)
+        label.Settings.NumberOnly = true
+        label.Settings.RoundNumber = 2
+        label.Settings.Bounds.Enabled = true
+        label.Settings.Bounds.Min = 0
+        label.Settings.Bounds.Max = math.huge
+        label.Text = tostring(math.floor(val*100+.5)/100)
+        label.OnCompletion = function()
+            item.Stats.Dict[key] = tonumber(label.Text)
+        end
+        label:SetColours(unpack(Colours.WindowUI.NormalField))
+        label.FontColour = {
+            R = Colours.WindowUI.NormalTextColour[1] or 0,
+            G = Colours.WindowUI.NormalTextColour[2] or 0,
+            B = Colours.WindowUI.NormalTextColour[3] or 0,
+            A = Colours.WindowUI.NormalTextColour[4] or 1;
+        }
+        window:Attach(label, x + w/2, y, 3)
+    end
+
     --angle & mirror and a lot of other bools
     self.DisplayForStat.Angle = function(item, key, val, x, y, w, h, window)
         defLabel(key, x, y, w, h, window)
@@ -480,6 +516,7 @@ function mod:GetStats(item)
             dict[key] = val
         end
     end
+    local initialised = false
     stats.Dict = setmetatable({},{ --create a metatable so it automaticly applies the changes
         __index = function(_, key)
             return dict[key]
@@ -500,6 +537,19 @@ function mod:GetStats(item)
                 item.Frame:ChangeZ(val)
             elseif key == "Layer" then
                 item.Frame:ChangeZ(nil, val == "Mixed" and "r" or val == "Front" and "f" or "b")
+            elseif key == "Depth" then
+                if initialised then
+                    local delta = item.Frame.H - val
+                    print(delta)
+                    item.Frame:Move(nil, item.Frame.Y - delta/2)
+                end
+                item.Frame:Resize(nil, val)
+            elseif key == "Length" then
+                if initialised then
+                    local delta = item.Frame.W - val
+                    item.Frame:Move(item.Frame.X - delta/2)
+                end
+                item.Frame:Resize(val)
             end
         end
     })
@@ -512,16 +562,17 @@ function mod:GetStats(item)
     end
     stats.Stats = nil --remove the old stats table
 
-    if item.ItemId == 9 then --if the item is rotating square make it fit between the sizes
+    if item.ItemId == 9 or item.ItemId == 38 then --if the item is rotating square make it fit between the sizes
         item.Frame:Resize(stats.Dict.Size, stats.Dict.Size)
         item.Frame.FitImageInsideWH = true
     end
 
+    initialised = true
     return stats
 end
 
 function mod:New(id, x, y) --create new
-    if ToolSettings.ShiftDown then
+    if ToolSettings.CtrlDown then
         x = math.floor(x/ToolSettings.ItemGrid.X+0.5)*ToolSettings.ItemGrid.X
         y = math.floor(y/ToolSettings.ItemGrid.Y+0.5)*ToolSettings.ItemGrid.Y
     end
@@ -533,6 +584,9 @@ function mod:New(id, x, y) --create new
     item.Frame:Resize(item.Frame.ImageData.W, item.Frame.ImageData.H)
     item.Frame.Visible = true
     item.IsBeingDragged = false
+    if Textures.RawTextures.Items[item.ItemId] then
+        item.Frame:SetCollisionTexture(Textures.RawTextures.Items[item.ItemId])
+    end
     item.LastLocation = {X = 0, Y = 0}
     item._LastPressed = os.clock()
     item.Frame.Collision.OnClick = function(mx, my) --onclick behaviour (todo: add double click)
@@ -656,7 +710,7 @@ function mod:New(id, x, y) --create new
         self.Frame:Destroy()
     end
     LD.Level.Items[item.Id] = item
-    if not ToolSettings.CtrlDown then
+    if not ToolSettings.ShiftDown then
         ToolSettings.ItemTool = "move"
     end
     return item
@@ -671,7 +725,7 @@ function mod:Update()
                 local x, y = graphics:ScreenToWorld(mx, my)
                 local dx, dy = item.LastLocation.X + x, item.LastLocation.Y + y
                 local fx, fy = dx, dy
-                if ToolSettings.ShiftDown then
+                if ToolSettings.CtrlDown then
                     fx = math.floor(dx/ToolSettings.ItemGrid.X+0.5)*ToolSettings.ItemGrid.X
                     fy = math.floor(dy/ToolSettings.ItemGrid.Y+0.5)*ToolSettings.ItemGrid.Y
                 end
