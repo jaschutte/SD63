@@ -583,19 +583,21 @@ function mod:New(id, x, y) --create new
     item.Frame:SetImage(Textures.ItemTextures[id])
     item.Frame:Resize(item.Frame.ImageData.W, item.Frame.ImageData.H)
     item.Frame.Visible = true
+    item.Frame.SecondPressWillSelectUnder = true
     item.IsBeingDragged = false
     if Textures.RawTextures.Items[item.ItemId] then
         item.Frame:SetCollisionTexture(Textures.RawTextures.Items[item.ItemId])
     end
     item.LastLocation = {X = 0, Y = 0}
-    item._LastPressed = os.clock()
-    item.Frame.Collision.OnClick = function(mx, my) --onclick behaviour (todo: add double click)
+    item.Frame.Collision.OnClick = function(mx, my, button) --onclick behaviour (todo: add double click)
         if ToolSettings.CurrentDisplay == "Items" then
-            item.IsBeingDragged = true
+            if button == 1 then
+                item.IsBeingDragged = true
+            end
             mx, my = graphics:ScreenToWorld(mx, my)
             item.LastLocation.X, item.LastLocation.Y = item.Frame.X - mx, item.Frame.Y - my
             local now = os.clock()
-            if now-item._LastPressed ~= 0 and now-item._LastPressed <= 0.3 then --0.3 is the max time between the double click
+            if button == 2 then --open properties once button 2 has been pressed
                 --open tab
                 local window = windows:NewWindow(ToolSettings.MouseX, ToolSettings.MouseY)
                 window:Resize(400, 300)
@@ -681,7 +683,6 @@ function mod:New(id, x, y) --create new
                 window:Resize(window.W, height)
                 window:SetTitle("Modifying Item: "..(self.NamesForId[item.ItemId] or "ERR: No Name Found").." (#"..item.Id..")")
             end
-            item._LastPressed = now
         end
     end
     item.Frame.Collision.OnUp = function()

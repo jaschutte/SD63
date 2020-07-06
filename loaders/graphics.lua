@@ -42,6 +42,13 @@ local function polyPoint(px, py, verts) --modified version from the one availabl
     return collision
 end
 
+local function rotate(x, y, ox, oy, a) --rotate a point around an origin
+    local sA, cA = math.sin(a), math.cos(a)
+    local oX, oY = x - ox, y - oy
+    local rX, rY = oX * cA - oY * sA, oX * sA + oY * cA
+    return rX + ox, rY + oy
+end
+
 local function clamp(x,y,z) --limit x between y and z
     return (x > y and x or y) < z and (x > y and x or y) or z
 end
@@ -268,13 +275,14 @@ function mod:NewFrame(x,y,w,h,z,layer,ax,ay)
         IsDown = false;
     }
     obj.Visible = false
+    obj.SecondPressWillSelectUnder = false
     obj.OnScreen = true
     obj.ApplyZoom = true
     obj.ScreenPosition = false --if false it will use CameraPosition
     obj.AponDeletion = {} --invokes when this frame is being deleted, USE GETID() AS A KEY!!
     obj.CollisionTexture = nil
     function obj:SetCollisionTexture(rawText) --must be fed a raw texture inorder to work properly
-        self.CollisionTexture = rawText and mod:KeepNonAlpha(rawText) or nil
+        self.CollisionTexture = rawText and mod:KeepNonAlpha(rawText) or nil --this is unused.
     end
     function obj:SetColours(r,g,b,a,forBackground)
         if forBackground then
@@ -290,22 +298,18 @@ function mod:NewFrame(x,y,w,h,z,layer,ax,ay)
         end
         return obj
     end
-    function obj:CheckCollision(mx,my, rawCheck)
+    function obj:CheckCollision(mx,my, accurateCollision)
         local x,y, w,h = obj:ToScreenPixels()
-        local isInBounds = mx > x and mx < x+w and my > y and my < y+h
-        if self.CollisionTexture and not rawCheck then --if raw check bounds alone will do
-            --local nx, ny = mx - x, my - y
-            --local succes, isOpaque = mod:SaveCheckPixel(self.CollisionTexture, nx, ny)
-            print(polyPoint(mx, my, {x, y, x + w, y, x + w, y + h, x, y + h}))
-            mod:NewFrame(
-                math.cos(self.R) * w + x,
-                math.cos(self.R) * h + y,
-                5, 5
-            ).Visible = true
-            return true
-            --return succes and isOpaque == 1
+        if accurateCollision then --if raw check bounds alone will do
+            local cX, cY = x + w/2, y + h/2
+            local corners = {}
+            corners[1], corners[2] = rotate(x, y, cX, cY, self.R)
+            corners[3], corners[4] = rotate(x + w, y, cX, cY, self.R)
+            corners[5], corners[6] = rotate(x + w, y + h, cX, cY, self.R)
+            corners[7], corners[8] = rotate(x, y + h, cX, cY, self.R)
+            return polyPoint(mx, my, corners)
         else
-            return isInBounds
+            return mx > x and mx < x+w and my > y and my < y+h
         end
     end
     function obj:SetImage(img)

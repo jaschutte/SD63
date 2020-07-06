@@ -257,6 +257,7 @@ function love.mousereleased(mx,my,b)
     end
 end
 
+local clickIgnoreList = {List = {}, Last = nil}
 function love.mousepressed(mx,my,b)
     --afterclick
     for _,event in pairs(ClickBeforeEvents) do
@@ -266,18 +267,38 @@ function love.mousepressed(mx,my,b)
     ToolSettings.MouseDown = true
     tools:MouseDown(b)
     --OnClick events
+    local _hitSomething
     for i = #graphics.FramesOnZ,1,-1 do
         local frame = graphics.FramesOnZ[i]
         if frame then
             if frame.Visible and frame.Collision.OnClick then
-                if frame:CheckCollision(mx,my) then
-                    frame.Collision.IsDown = true
-                    frame.Collision.OnClick(mx,my,b)
-                    break
+                if frame:CheckCollision(mx, my, true) then
+                    if not frame.SecondPressWillSelectUnder then
+                        frame.Collision.IsDown = true
+                        frame.Collision.OnClick(mx,my,b)
+                        _hitSomething = true
+                        break
+                    elseif not clickIgnoreList.List[frame.Id] then
+                        clickIgnoreList.List[frame.Id] = true
+                        frame.Collision.IsDown = true
+                        frame.Collision.OnClick(mx,my,b)
+                        _hitSomething = true
+                        break
+                    else
+                        clickIgnoreList.Last = frame
+                    end
                 end
             end
         else
             print("Warning: Id "..i.." is nil!")
+        end
+    end
+    if not _hitSomething then
+        clickIgnoreList.List = {}
+        if clickIgnoreList.Last then
+            clickIgnoreList.Last.Collision.IsDown = true
+            clickIgnoreList.Last.Collision.OnClick(mx,my,b)
+            clickIgnoreList.Last = nil
         end
     end
     --afterclick
