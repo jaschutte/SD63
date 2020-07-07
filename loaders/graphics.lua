@@ -13,17 +13,6 @@ mod.TotalFrames = 0
 mod._RECALC_ON_SCRN_EVERY = 20
 --mod.ItemSpriteBatch = love.graphics.newSpriteBatch() --group all items in here maybe?
 
---[[
-    Add a scrollbar class;
-    properties:
-        ScrollW = W;
-        ScrollH = H;
-        ScrollUpDown = true;
-        ScrollLeftRight = false;
-    functions:
-        :Influence(frame) --the influenced frame moves with the scrollbar
-]]
-
 local function polyPoint(px, py, verts) --modified version from the one available on the love2d forums
     local next, collision = 3, false
     assert(#verts%2 == 0, "Not a valid polygon!")
@@ -617,6 +606,100 @@ function mod:NewEditableText(x,y,w,h,z,layer,ax,ay)
         mod.EditableTexts[obj.Id] = nil
     end
     self.EditableTexts[obj.Id] = obj
+    return obj
+end
+
+function mod:NewScrollbar(x,y,w,h,z,layer,ax,ay)
+    local obj = mod:NewFrame(x,y,w,h,z,layer,ax,ay) --this is the foundation of literally everything lol
+    obj.ScreenPosition = true
+    obj.ApplyZoom = false
+    obj.AnchorX, obj.AnchorY = 0, 0
+    obj.ScrollW = obj.W
+    obj.ScrollH = obj.H
+    obj.ScrollX, obj.ScrollY = 0, 0 --as usual, don't set these directly, use the scroll function
+    obj.ScrollUpDown = true --this only effects the scroll by mouse, does not limit the scroll function
+    obj.ScrollLeftRight = true --this only effects the scroll by mouse, does not limit the scroll function
+    obj.HasXScrollPriority = true --this only effects the scroll by mouse, does not limit the scroll function
+    obj.Attached = {}
+    local ogMove = obj.Move
+    function obj:Scroll(dX, dY) --the scroll function, it uses deltas so be wary about that
+        dX, dY = dX or 0, dY or 0 --default values and stuffz
+        self.ScrollX, self.ScrollY = self.ScrollX + dX, self.ScrollY + dY
+        for _,frame in pairs(self.Attached) do --update all frames
+            frame[2], frame[3] = frame[2] + dX, frame[3] + dY --add this to their 'offset'
+            frame[1]:Move(self.X + frame[2], self.Y + frame[3])
+        end
+    end
+    function obj:Move(x, y) --invoke when moving the window, also updates attached frames
+        ogMove(self, x, y) --don't forget to call the original function!
+        for _,data in pairs(self.Attached) do
+            data[1]:Move(self.X + data[2], self.Y + data[3])
+        end
+        for _,frame in pairs(self.Attached) do --update the clips
+            frame[1].Clips.X, frame[1].Clips.Y = self.X, self.Y
+            frame[1]:Move(self.X + frame[2], self.Y + frame[3])
+        end
+    end
+    local ogResize = obj.Resize
+    function obj:Resize(w, h)
+        ogResize(self, w, h) --no suger syntax thus we have to include self
+        for _,frame in pairs(self.Attached) do --update the clips
+            frame[1]:ChangeZ(self.Z + frame[4], self.Layer)
+        end
+    end
+    local ogChangeZ = obj.ChangeZ
+    function obj:ChangeZ(z, layer)
+        ogChangeZ(z, layer)
+        for _,frame in pairs(self.Attached) do --update the z and stuffz
+            frame[1].Clips.W, frame[1].Clips.H = self.W, self.H
+        end
+    end
+    function obj:Attach(frame, offx, offy, z)
+        z = z or 1
+        frame.AponDeletion[GetId()] = function(fr) --make sure the same gets deattached when deleted, would cause nasty problems otherwise
+            self:DeAttach(fr)
+        end
+        frame:ChangeZ(self.Z + z, self.Layer)
+        frame:Move(self.X + offx, self.Y + offy)
+        frame.ScreenPosition = true
+        frame.ApplyZoom = false
+        frame.Visible = true
+        frame.Clips.AnchorX, frame.Clips.AnchorY = 0, 0
+        frame.Clips.X, frame.Clips.Y = self.X, self.Y
+        frame.Clips.W, frame.Clips.H = self.W, self.H
+        self.Attached[frame.Id] = {frame, offx, offy, z}
+    end
+    function obj:DeAttach(frame) --this is sad gamer moment
+        self.Attached[frame.Id] = nil
+    end
+    local ogDelete = obj.Destroy
+    function obj:Destroy()
+        local att = {}
+        for id,frame in pairs(self.Attached) do
+            att[id] = frame[1]
+        end
+        mod:MassDelete(att)
+        ogDelete(self) --self destruct!
+    end
+    --[[obj.Collision.OnEnter = nil
+    obj.Collision.OnLeave = nil
+    obj.Collision.DetectHover = true--]]
+    obj.Collision.OnScroll = function(delta)
+        local dx = obj.ScrollLeftRight and LD.Settings.ScrollSpeed * delta or 0
+        local dy = obj.ScrollUpDown and LD.Settings.ScrollSpeed * delta or 0
+        print(obj.HasXScrollPriority, dx, dy)
+        if obj.HasXScrollPriority and dx ~= 0 then
+            dy = 0
+        elseif not obj.HasXScrollPriority and dy ~= 0 then
+            dx = 0
+        end
+        print(dx, dy)
+        obj:Scroll(dx, dy)
+    end
+    --[[
+        TODO:
+        add a scrollbar for those without a scrollwheel
+    ]]
     return obj
 end
 

@@ -218,6 +218,10 @@ function mod:Init()
         defLabel(key, x, y, w, h, window)
         local label = graphics:NewText(0, 0, w/2, h)
         label.Text = "Click To Edit"
+        label.Collision.OnClick = function() --open the editor for mods
+            modHandler:OpenEditor(item.Id)
+            window:Close() --we can't have the old window open now can we?
+        end
         label.FontColour = {
             R = Colours.WindowUI.NormalTextColour[1] or 0,
             G = Colours.WindowUI.NormalTextColour[2] or 0,

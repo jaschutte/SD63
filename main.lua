@@ -86,7 +86,7 @@ _G.LD = {
     };
     Settings = {
         CameraSpeed = 1;
-        ScrollSpeed = 1;
+        ScrollSpeed = 15;
         Mods = {};
         ToolHolder = {
             SizeX = 200;
@@ -420,8 +420,16 @@ function love.keyreleased(key)
     tools:OnKeyRelease(key) --update the tools library
 end
 
+local fr = graphics:NewFrame(0, 0, 20, 20)
+local test = graphics:NewScrollbar(200, 300, 100, 200)
+test:SetColours(.2, .2, .2)
+test:Attach(fr, 0, 0)
+test:Move()
+test.Visible = true
+
 local _FRAMES_UNTIL_RECACL = 0
 function love.update(dt)
+    --test:Move(ToolSettings.MouseX - 10, ToolSettings.MouseY - 10)
     --camera
     local cX, cY = CameraPosition.X, CameraPosition.Y
     local ch = 500*dt*LD.Settings.CameraSpeed
