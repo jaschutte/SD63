@@ -100,7 +100,7 @@ function mod:ReadSavedTiles()
     local msg = graphics:AddMessage("Collecting saved tiles please wait", math.huge)
     local savedTiles = mod:StringToTable(love.filesystem.read("SavedTiles1.luat"))
     if not savedTiles then
-        msg:SetColours(1,0,0)
+        msg:SetColours(1, 0, 0)
         msg:Update("Failed loading tiles. SavedTiles1.luat is corrupted. Please delete the file and try again.", 3)
         print("LoadingTiles/Whoops/1")
         return

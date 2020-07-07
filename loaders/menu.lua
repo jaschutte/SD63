@@ -382,6 +382,7 @@ function mod:GenerateIcons(tileIcons)
                 icon.KeepBackground = true
                 icon.ScreenPosition = true
                 icon.ApplyZoom = false
+                icon.KeepImageScale = true
                 icon.Clips = {
                     AnchorX = 0;
                     AnchorY = 0;
@@ -444,6 +445,7 @@ function mod:GenerateIcons(tileIcons)
                 icon.KeepBackground = true
                 icon.ScreenPosition = true
                 icon.ApplyZoom = false
+                icon.KeepImageScale = true
                 icon.Clips = {
                     AnchorX = 0;
                     AnchorY = 0;
@@ -475,6 +477,7 @@ function mod:GenerateIcons(tileIcons)
                 icon.KeepBackground = true
                 icon.ScreenPosition = true
                 icon.ApplyZoom = false
+                icon.KeepImageScale = true
                 icon.Clips = {
                     AnchorX = 0;
                     AnchorY = 0;

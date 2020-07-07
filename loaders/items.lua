@@ -15,6 +15,7 @@
 
 local graphics = require("loaders.graphics")
 local windows = require("loaders.window")
+local modHandler = require("loaders.modhandler")
 
 local mod = {}
 mod.DisplayForStat = {}
@@ -39,6 +40,8 @@ function mod:Init()
         ["39"] = {Stats = {0, 0, 1}; Desc = {"Target X", "Target Y", "Frame"};}; ["40"] = {Stats = {0, 0}; Desc = {"Target X", "Target Y"};};
         ["44"] = {Stats = {0, 12, 16, 7, 1, 0.1, 3, 30, 1}; Desc = {"Offset", "Wait Time", "Ground Wait Time", "Fall Speed", "Fall Acceleration", "Rise Acceleration", "Rise Speed", "Range", "Chase"};};
         ["45"] = {Stats = {0, 100, 100, 64, 92, 0, 0, 0}; Desc = {"Angle", "X Scale", "Y Scale", "On Wait", "Off Wait", "Disabled", "Offset", "Start Off"};};
+        ["46"] = {Stats = {"", ""}; Desc = {"Mod Link", "Initial Values"};};
+        ["47"] = {Stats = {""}; Desc = {"Mod Values"};};
         ["71"] = {Stats = {"Both", 0, 3, 100, 0, 1, 0}; Desc = {"Direction", "Angle", "Speed", "Wait", "Offset", "Color", "Chase"};};
         ["73"] = {
             Stats = {math.random(1,4) == 1 and "H0i I'm temmie!" or math.random(1,3) == 1 and "How is your day sir?" or math.random(1,2) == 1 and "This is a sign. It's quite a boring one I would say." or "Hey don't paste mods in here! I'm a SIGN! Not a mod loader!"};
@@ -194,7 +197,53 @@ function mod:Init()
         window:Attach(label, x + w/2, y, 3)
         addSub(item, key, x, y, w, h, label, window, 1)
     end
+
+    --mod link & mod values
+    self.DisplayForStat.ModLink = function(item, key, val, x, y, w, h, window)
+        defLabel(key, x, y, w, h, window)
+        local label = graphics:NewEditableText(0, 0, w/2, h)
+        label.OnCompletion = function()
+            item.Stats.Dict[key] = label.Text
+        end
+        label.FontColour = {
+            R = Colours.WindowUI.NormalTextColour[1] or 0,
+            G = Colours.WindowUI.NormalTextColour[2] or 0,
+            B = Colours.WindowUI.NormalTextColour[3] or 0,
+            A = Colours.WindowUI.NormalTextColour[4] or 1;
+        }
+        label:SetColours(unpack(Colours.WindowUI.NormalField))
+        window:Attach(label, x + w/2, y, 3)
+    end
+    self.DisplayForStat.ModValues = function(item, key, val, x, y, w, h, window)
+        defLabel(key, x, y, w, h, window)
+        local label = graphics:NewText(0, 0, w/2, h)
+        label.Text = "Click To Edit"
+        label.FontColour = {
+            R = Colours.WindowUI.NormalTextColour[1] or 0,
+            G = Colours.WindowUI.NormalTextColour[2] or 0,
+            B = Colours.WindowUI.NormalTextColour[3] or 0,
+            A = Colours.WindowUI.NormalTextColour[4] or 1;
+        }
+        label:SetColours(unpack(Colours.WindowUI.NormalField))
+        window:Attach(label, x + w/2, y, 3)
+    end
+    self.DisplayForStat.InitialValues = self.DisplayForStat.ModValues
     
+    --text sign
+    self.DisplayForStat.Text = function(item, key, val, x, y, w, h, window)
+        defLabel(key, x, y, w, h, window)
+        local label = graphics:NewText(0, 0, w/2, h)
+        label.Text = "Click To Edit"
+        label.FontColour = {
+            R = Colours.WindowUI.NormalTextColour[1] or 0,
+            G = Colours.WindowUI.NormalTextColour[2] or 0,
+            B = Colours.WindowUI.NormalTextColour[3] or 0,
+            A = Colours.WindowUI.NormalTextColour[4] or 1;
+        }
+        label:SetColours(unpack(Colours.WindowUI.NormalField))
+        window:Attach(label, x + w/2, y, 3)
+    end
+
     --directions
     self.DisplayForStat.Direction = function(item, key, val, x, y, w, h, window) --direction textboxes
         defLabel(key, x, y, w, h, window)
@@ -540,7 +589,6 @@ function mod:GetStats(item)
             elseif key == "Depth" then
                 if initialised then
                     local delta = item.Frame.H - val
-                    print(delta)
                     item.Frame:Move(nil, item.Frame.Y - delta/2)
                 end
                 item.Frame:Resize(nil, val)
@@ -550,6 +598,16 @@ function mod:GetStats(item)
                     item.Frame:Move(item.Frame.X - delta/2)
                 end
                 item.Frame:Resize(val)
+            elseif key == "Color" or key == "BlockType" or key == "PlatformSize" then
+                if item.ItemPreview then
+                    local skin = Textures.ItemSkins[tostring(item.ItemId)]
+                    if skin and skin[tostring(val)] then
+                        item.ItemPreview:SetImage(skin[tostring(val)])
+                        if key ~= "Color" then
+                            item.Frame:SetImage(skin[tostring(val)])
+                        end
+                    end
+                end
             end
         end
     })
@@ -560,7 +618,7 @@ function mod:GetStats(item)
             stats.Dict[key] = val --invoke all of the metaevents so it updated once placed
         end
     end
-    stats.Stats = nil --remove the old stats table
+    stats.Stats = nil
 
     if item.ItemId == 9 or item.ItemId == 38 then --if the item is rotating square make it fit between the sizes
         item.Frame:Resize(stats.Dict.Size, stats.Dict.Size)
@@ -588,6 +646,7 @@ function mod:New(id, x, y) --create new
     if Textures.RawTextures.Items[item.ItemId] then
         item.Frame:SetCollisionTexture(Textures.RawTextures.Items[item.ItemId])
     end
+    item.ItemPreview = nil
     item.LastLocation = {X = 0, Y = 0}
     item.Frame.Collision.OnClick = function(mx, my, button) --onclick behaviour (todo: add double click)
         if ToolSettings.CurrentDisplay == "Items" then
@@ -683,7 +742,43 @@ function mod:New(id, x, y) --create new
                     window:Attach(appear, 2, math.ceil(offsetS/2) * 18 + 81 + (offsetS ~= 0 and 23 or -2))
                     height = height + math.ceil(offsetA/2) * 18 + 25
                 end
-
+                height = height + 56
+                --image show
+                local texts = {
+                    "Looking pretty good!", "AH! I didn't notice you there!", "But does it run sm63?",
+                    "I rate it "..math.random(10).." out of 10.", "No.", "Yes.", "Maybe?",
+                    "Oi! Get outta here I'm having lunch!!", "Meh.", "It's alright..", "Good good.",
+                    "Sadly doesn't support raytracing.", "Super Raytracing 63", "This has nothing to do with the item."
+                } --some random text because normal text is boring
+                local imgShow = graphics:NewText(0, 0, window.W - 4, 54)
+                imgShow.Text = "       <- Item Preview\n       "..texts[math.random(#texts)]
+                imgShow.FontColour = {
+                    R = Colours.WindowUI.HeaderTextColour[1] or 0,
+                    G = Colours.WindowUI.HeaderTextColour[2] or 0,
+                    B = Colours.WindowUI.HeaderTextColour[3] or 0,
+                    A = Colours.WindowUI.HeaderTextColour[4] or 1;
+                }
+                imgShow:SetFont("InconsolataBold", 16)
+                imgShow:SetColours(unpack(Colours.WindowUI.Tab))
+                imgShow.AnchorX, basic.AnchorY = 0, 0
+                window:Attach(imgShow, 2, height - 56)
+                local img = graphics:NewFrame(0, 0, 50, 50) --create the item preview
+                img.FitImageInsideWH = true
+                img.AnchorX, img.AnchorY = .5, .5
+                img.KeepImageScale = true
+                img:SetImage(item.Frame.ImageData.Image)
+                item.ItemPreview = img
+                if Textures.ItemSkins[tostring(item.ItemId)] then --recall every metamethod again shhh
+                    for _,key in ipairs(item.Stats.Desc) do
+                        key = key:gsub(" ","")
+                        item.Stats.Dict[key] = item.Stats.Dict[key] --invoke all of the metaevents so it updated once placed
+                    end
+                end
+                img.AponDeletion[GetId()] = function()
+                    item.ItemPreview = img
+                end
+                window:Attach(img, 29, height - 29)
+                --
                 window:Resize(window.W, height)
                 window:SetTitle("Modifying Item: "..(self.NamesForId[item.ItemId] or "ERR: No Name Found").." (#"..item.Id..")")
             end

@@ -11,6 +11,7 @@ _G.Catagories = {
 }
 _G.Textures = {
     MenuTextures = {};
+    ItemSkins = {};
     TileTextures = {};
     ItemTextures = {};
     HUDTextures = {};
@@ -146,6 +147,21 @@ local windows = require("loaders.window")
 local DIR = tostring(io.popen("CD"):read())
 
 function love.load()
+    local texts = {
+        "Nice day outside isn't it?", "h", "Created by Trump himself.", "Pew! Pew! Boom!",
+        "Boop", "Nyeheheh", "So cool", "Do you know the way?\nI'm lost..\nplease...",
+        "This is an level designer, WHAT ON EARTH IS IT LOADING!?", "Have you read my book yet?",
+        "Ngl, sm63 is pretty cool, I wish there was an level designer for it though...",
+        "Did you know?\nJe ne parle pas français.\nJE PARLE BAGUETTE!", "There's wayyy to many of these texts...",
+        "Hello!", "Kabieeeeem", "sans undertale xD xD xD XDDDDD SO FUNNY", "Sponsored by Temmie Flakes!",
+        "What if... I doubled the 63 in sm63 and then added 1. Maybe there's a game named like that.",
+        "Mario & Mario: Mario's inside story.", "Building a space station."
+    }
+    math.randomseed(os.time())
+    love.graphics.setColor(0, 0, 0)
+    love.graphics.rectangle("fill", 0, 0, WindowX, WindowY)
+    love.graphics.setColor(1, 1, 1)
+    love.graphics.print("Loading textures...\n"..texts[math.random(1, #texts)], 10, 10)
     --load textures
     local dir = "textures/menuTexturesDark"
     for _,texture in pairs(love.filesystem.getDirectoryItems(dir)) do
@@ -206,8 +222,15 @@ function love.load()
     end
     local dir = "textures/themes/items"
     for _,texture in pairs(love.filesystem.getDirectoryItems(dir)) do
-        print("THEME/ITEMS/"..texture:sub(1,-5))
         Textures.MenuTextures["THEME/ITEMS/"..texture:sub(1,-5)] = love.graphics.newImage(dir.."/"..texture)
+    end
+    --skins
+    local dir = "textures/skins"
+    for _,item in pairs(love.filesystem.getDirectoryItems(dir)) do
+        Textures.ItemSkins[item] = {}
+        for _,skinNum in pairs(love.filesystem.getDirectoryItems(dir.."/"..item)) do
+            Textures.ItemSkins[item][skinNum:sub(1,-5)] = love.graphics.newImage(dir.."/"..item.."/"..skinNum)
+        end
     end
     --load font
     for _,name in pairs(Fonts.FontNames) do

@@ -78,6 +78,13 @@ local function drawFunc(obj) --fixed it yeya
             end
             if obj.FitImageInsideWH then
                 sX, sY = sX * obj.ImageData.ScaleX, sY * obj.ImageData.ScaleY
+                if obj.KeepImageScale then
+                    if obj.ImageData.W > obj.ImageData.H then
+                        sY = sY * obj.ImageData.H / obj.ImageData.W
+                    else
+                        sX = sX * obj.ImageData.W / obj.ImageData.H
+                    end
+                end
             end
             if obj.Mirror then
                 sX = sX * -1
@@ -264,6 +271,7 @@ function mod:NewFrame(x,y,w,h,z,layer,ax,ay)
     }
     obj.Id = GetId()
     obj.FitImageInsideWH = false
+    obj.KeepImageScale = false
     obj.Collision = {
         OnClick = nil; --when the user presses the frame
         OnUp = nil; --when the mouse is up
