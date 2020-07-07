@@ -284,8 +284,8 @@ end
 function mod:MouseDown(b)
     --!!MAKE SNAPSHOT
     if b == 2 then
-        ToolSettings.EraserMode = true
         if ToolSettings.CurrentDisplay == "Tiles" then
+            ToolSettings.EraserMode = true
             if ToolSettings.TileTool == "fill" then
                 love.mouse.setCursor(Textures.RawTextures.Cursors.bucketRemove)
                 local x, y = graphics:ScreenToTile(ToolSettings.MouseX, ToolSettings.MouseY)
@@ -405,6 +405,9 @@ function mod:OnKeyPress(key)
     if key == "lctrl" then
         ToolSettings.CtrlDown = true
     end
+    if ToolSettings.CurrentDisplay == "Items" and (key == "lctrl" or key == "z") then
+        ToolSettings.EraserMode = true
+    end
 end
 
 function mod:OnKeyRelease(key)
@@ -416,6 +419,9 @@ function mod:OnKeyRelease(key)
     end
     if key == "lctrl" then
         ToolSettings.CtrlDown = false
+    end
+    if key == "lctrl" or key == "z" then
+        ToolSettings.EraserMode = false
     end
 end
 

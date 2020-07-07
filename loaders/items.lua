@@ -591,6 +591,10 @@ function mod:New(id, x, y) --create new
     item.LastLocation = {X = 0, Y = 0}
     item.Frame.Collision.OnClick = function(mx, my, button) --onclick behaviour (todo: add double click)
         if ToolSettings.CurrentDisplay == "Items" then
+            if ToolSettings.EraserMode then
+                item:Destroy()
+                return
+            end
             if button == 1 then
                 item.IsBeingDragged = true
             end

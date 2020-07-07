@@ -10,7 +10,8 @@ local function sign(x,f) --get the sign of an number. Option to replace 0 with f
 end
 
 function mod:ArrayToString(a) --only give arrays to this and NOT DIRECTIONARIES. Ignores functions.
-    a = a or {}  --REPLACE THESE WITH LOVE FUNCTIONS
+    return love.data.pack(a)
+    --[[a = a or {}  --REPLACE THESE WITH LOVE FUNCTIONS
     local s = "{"
     for _,v in ipairs(a) do
         if type(v) == "table" then
@@ -25,11 +26,12 @@ function mod:ArrayToString(a) --only give arrays to this and NOT DIRECTIONARIES.
             s = s..val..","
         end
     end
-    return s.."}"
+    return s.."}"--]]
 end
 
 function mod:TableToString(t) --Ignores functions.
-    t = t or {}  --REPLACE THESE WITH LOVE FUNCTIONS
+    return love.data.pack(t)
+    --[[t = t or {}  --REPLACE THESE WITH LOVE FUNCTIONS
     local s = "{"
     for k,v in pairs(t) do
         if type(v) == "table" then
@@ -46,18 +48,19 @@ function mod:TableToString(t) --Ignores functions.
             s = s..key..val..","
         end
     end
-    return s.."}"
+    return s.."}"--]]
 end
 
 function mod:StringToTable(s) --REPLACE THESE WITH LOVE FUNCTIONS
-    s = s or ""
+    return love.data.unpack(s)
+    --[[s = s or ""
     local suc, func = pcall(loadstring, "local TABLE = "..s.."; return TABLE")
     if suc and func then
         local env = setfenv(func,{}) --don't give it acces to anything.
         return env()
     else
         return nil
-    end
+    end--]]
 end
 
 function mod:DeleteTiles(id)
