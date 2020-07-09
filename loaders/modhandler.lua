@@ -10,6 +10,7 @@ function mod:OpenEditor(id)
     window:SetScaling(true)
     window:SetTitle("Value Editor")
     local main = graphics:NewScrollbar(0, 16, 300, 186)
+    main.WindowParent = window
     main:SetColours(0, 0, 0, 0)
     window.OnResize = function(w, h)
         main:Resize(w, h - 16)

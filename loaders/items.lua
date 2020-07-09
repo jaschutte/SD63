@@ -22,7 +22,11 @@ mod.DisplayForStat = {}
 mod.SpecialStats = {}
 mod.NamesForId = {
     [1] = "Spawn"; [2] = "Coin"; [3] = "Red Coin"; [4] = "Blue Coin"; [5] = "Silver Star"; [6] = "Shrine"; [7] = "Green Platform"; [8] = "Rotating Green Platforms"; [9] = "Rotating Square";
-    [10] = "Node"; [11] = "Falling Node";
+    [10] = "Log"; [11] = "Falling Log"; [12] = "Tripping Log Small"; [13] = "Tripping Log Medium"; [14] = "Tripping Log Large"; [15] = "Tripping Log HUGEEEE"; [16] = "Floating Platform";
+    [17] = "Floating Platform But Better"; [18] = "Flipp'n Platform", [19] = "Flipp'n Platform But It's Epicer"; [20] = "Clock"; [21] = "Clock"; [22] = "Clock"; [23] = "Clock"; [24] = "Triangle";
+    [25] = "Triangle"; [26] = "Triangle"; [27] = "Triangle"; [28] = "Bone Platform"; [29] = "Metal Platform"; [30] = "Metal Platform 64"; [31] = "Cloud Small"; [32] = "Cloud Meh";
+    [33] = "Cloud Hm?"; [34] = "Cloud BIIIGGG"; [35] = "Bridge"; [36] = "Snowy Platform"; [37] = "Sling Star"; [38] = "Water"; [39] = "Door"; [40] = "Pipe Top";
+    [41] = "Pipe"; [42] = "Pipe No Teleport"; [43] = "The Only Way To Prefent Lag"; [44] = "Thwomp"; [45] = "FIRE!!!"; [46] = "Beep Boop Mod Loader"; [47] = "Boop Mod Values Beep";
 }
 mod.Appearance = {ZIndex = true, Layer = true, PlatformSize = true, Mirror = true, Angle = true, Color = true, Frame = true, BlockType = true, Size = true, Depth = true, Length = true}
 

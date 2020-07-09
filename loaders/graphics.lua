@@ -622,6 +622,7 @@ function mod:NewScrollbar(x,y,w,h,z,layer,ax,ay)
     obj.ScrollLeftRight = true --this only effects the scroll by mouse, does not limit the scroll function
     obj.HasXScrollPriority = true --this only effects the scroll by mouse, does not limit the scroll function
     obj.IsSliderDown = false --is a slider currently being pressed?
+    obj.WindowParent = nil --if this exists, the window will have a small cooldown when closing when dragging the sliders
     obj.Sliders = {
         Horizontal = {
             Bg = mod:NewFrame(0, 0, 0, 0, obj.Z + 1, obj.Layer, 0, 0);
@@ -1047,6 +1048,9 @@ function mod:Update(dt) --gets called every frame, yes ik we now have 2 update f
     collection:MapTag("Scrollbars", function(obj, sliders)
         if obj.IsSliderDown then
             local dX, dY = sliders[1] - ToolSettings.MouseX, sliders[2] - ToolSettings.MouseY
+            if obj.WindowParent then
+                obj.WindowParent._EnableClose = os.clock() + 0.5
+            end
             obj:SafeScroll(dX, dY)
         end
         sliders[1], sliders[2] = ToolSettings.MouseX, ToolSettings.MouseY
