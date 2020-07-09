@@ -405,7 +405,7 @@ function mod:OnKeyPress(key)
     if key == "lctrl" then
         ToolSettings.CtrlDown = true
     end
-    if ToolSettings.CurrentDisplay == "Items" and (key == "lctrl" or key == "z") then
+    if ToolSettings.CurrentDisplay == "Items" and (key == "backspace" or key == "z") then
         ToolSettings.EraserMode = true
     end
 end
@@ -420,7 +420,7 @@ function mod:OnKeyRelease(key)
     if key == "lctrl" then
         ToolSettings.CtrlDown = false
     end
-    if key == "lctrl" or key == "z" then
+    if key == "backspace" or key == "z" then
         ToolSettings.EraserMode = false
     end
 end

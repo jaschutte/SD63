@@ -18,8 +18,8 @@ function mod:NewWindow(x, y, w, h) --honestly this is just placing frames togeth
     window.Attached = {}
     window.WindowScale = {
         Enabled = false;
-        MinX = 50;
-        MinY = 50;
+        MinX = 96;
+        MinY = 80;
         MaxX = 500;
         MaxY = 500;
     }
@@ -42,6 +42,7 @@ function mod:NewWindow(x, y, w, h) --honestly this is just placing frames togeth
         tab.Collision.DetectHover = true
     end
     --scale behaviour
+    window.Tabs.ScaleIcon:SetImage(Textures.MenuTextures.scaleButton)
     window.Tabs.ScaleIcon.Collision.OnClick = function(x, y)
         window.LastLocation.X, window.LastLocation.Y = x, y
         window.IsScaled = true
@@ -66,6 +67,7 @@ function mod:NewWindow(x, y, w, h) --honestly this is just placing frames togeth
     window.Tabs.TopBar.Collision.OnUp = function()
         window.IsDragging = false
     end
+    window.OnResize = nil
     --close behaviour
     window.Tabs.ClosingIcon:SetImage(Textures.HUDTextures.genericClose)
     window.Tabs.ClosingIcon.FitImageInsideWH = true
@@ -92,11 +94,18 @@ function mod:NewWindow(x, y, w, h) --honestly this is just placing frames togeth
         mod.Windows[self.Id] = nil
     end
     function window:Resize(w, h)
-        self.W, self.H = w or self.W, h or self.H
+        self.W, self.H = math.max(32, w or self.W), math.max(32, h or self.H)
+        if self.WindowScale.Enabled then
+            self.W = math.min(math.max(self.W, self.WindowScale.MinX), self.WindowScale.MaxX)
+            self.H = math.min(math.max(self.H, self.WindowScale.MinY), self.WindowScale.MaxY)
+        end
         self.Tabs.MainBg:Resize(self.W, self.H - 16)
         self.Tabs.TopBar:Resize(self.W-16, 16)
         self.Tabs.ClosingIcon:Move(self.X+self.W-16, self.Y)
         self.Tabs.ScaleIcon:Move(self.X+self.W-16, self.Y+self.H-16)
+        if self.OnResize then
+            self.OnResize(self.W, self.H)
+        end
     end
     function window:Move(x, y) --invoke when moving the window, also updates attached frames
         self.X, self.Y = x or self.X, y or self.Y
@@ -155,6 +164,7 @@ function mod:OnMove(x, y)
             local dx, dy = window.LastLocation.X - x, window.LastLocation.Y - y
             window:Resize(window.W - dx, window.H - dy)
             window.LastLocation.X, window.LastLocation.Y = x, y
+            window._EnableClose = os.clock() + 0.5 --make sure the tab doesn't instantly close
         end
     end
 end

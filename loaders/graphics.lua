@@ -620,15 +620,44 @@ function mod:NewScrollbar(x,y,w,h,z,layer,ax,ay)
     obj.ScrollUpDown = true --this only effects the scroll by mouse, does not limit the scroll function
     obj.ScrollLeftRight = true --this only effects the scroll by mouse, does not limit the scroll function
     obj.HasXScrollPriority = true --this only effects the scroll by mouse, does not limit the scroll function
+    obj.Sliders = {
+        Horizontal = {
+            Bg = mod:NewFrame(0, 0, 0, 0, obj.Z + 1, obj.Layer, 0, 0);
+            Slider = mod:NewFrame(0, 0, 0, 0, obj.Z + 2, obj.Layer, .5, 0);
+        };
+        Vertical = {
+            Bg = mod:NewFrame(0, 0, 0, 0, obj.Z + 1, obj.Layer, 0, 0);
+            Slider = mod:NewFrame(0, 0, 0, 0, obj.Z + 2, obj.Layer, 0, .5);
+        };
+        SliderX = 0;
+        SliderY = 0;
+    }
+    --make sliders; I HATE THIS CODE SO MUCH
+    obj.Sliders.Horizontal.Bg:SetColours(0, 0, 0, 0.2)
+    obj.Sliders.Horizontal.Slider:SetColours(0, 0, 0, 0.5)
+    obj.Sliders.Vertical.Bg:SetColours(0, 0, 0, 0.2)
+    obj.Sliders.Vertical.Slider:SetColours(0, 0, 0, 0.5)
+    obj.Sliders.Horizontal.Slider.ScreenPosition = true obj.Sliders.Horizontal.Bg.ScreenPosition = true
+    obj.Sliders.Vertical.Slider.ScreenPosition = true obj.Sliders.Vertical.Bg.ScreenPosition = true
+    obj.Sliders.Horizontal.Slider.ApplyZoom = false obj.Sliders.Horizontal.Bg.ApplyZoom = false
+    obj.Sliders.Vertical.Slider.ApplyZoom = false obj.Sliders.Vertical.Bg.ApplyZoom = false
+    --Warning ugly code above
     obj.Attached = {}
     local ogMove = obj.Move
+    function obj:SafeScroll(dX, dY) --the function used by the scroll functions
+        local x, y = clamp(self.ScrollX + dX, -self.ScrollW, 0), clamp(self.ScrollY + dY, -self.ScrollH, 0)
+        obj:Scroll(x - self.ScrollX, y - self.ScrollY)
+    end
     function obj:Scroll(dX, dY) --the scroll function, it uses deltas so be wary about that
         dX, dY = dX or 0, dY or 0 --default values and stuffz
         self.ScrollX, self.ScrollY = self.ScrollX + dX, self.ScrollY + dY
+        self.Sliders.SliderX = self.ScrollX / self.ScrollW
+        self.Sliders.SliderY = self.ScrollY / self.ScrollH
         for _,frame in pairs(self.Attached) do --update all frames
             frame[2], frame[3] = frame[2] + dX, frame[3] + dY --add this to their 'offset'
             frame[1]:Move(self.X + frame[2], self.Y + frame[3])
         end
+        self:Move()
     end
     function obj:Move(x, y) --invoke when moving the window, also updates attached frames
         ogMove(self, x, y) --don't forget to call the original function!
@@ -639,6 +668,12 @@ function mod:NewScrollbar(x,y,w,h,z,layer,ax,ay)
             frame[1].Clips.X, frame[1].Clips.Y = self.X, self.Y
             frame[1]:Move(self.X + frame[2], self.Y + frame[3])
         end
+        obj.Sliders.Horizontal.Bg:Move(obj.X, obj.Y + obj.H - 16)
+        obj.Sliders.Horizontal.Slider:Move(obj.X - self.Sliders.SliderX * (self.W - 16), obj.Y + obj.H - 16)
+        obj.Sliders.Horizontal.Slider.AnchorX = -self.Sliders.SliderX
+        obj.Sliders.Vertical.Bg:Move(obj.X + obj.W - 16, obj.Y)
+        obj.Sliders.Vertical.Slider:Move(obj.X + obj.W - 16, obj.Y - self.Sliders.SliderY * (self.H - 16))
+        obj.Sliders.Vertical.Slider.AnchorY = -self.Sliders.SliderY
     end
     local ogResize = obj.Resize
     function obj:Resize(w, h)
@@ -646,10 +681,24 @@ function mod:NewScrollbar(x,y,w,h,z,layer,ax,ay)
         for _,frame in pairs(self.Attached) do --update the clips
             frame[1]:ChangeZ(self.Z + frame[4], self.Layer)
         end
+        obj.Sliders.Horizontal.Bg:Resize(obj.W - 16, 16)
+        obj.Sliders.Horizontal.Slider:Resize(48 / self.ScrollW * self.W, 16)
+        obj.Sliders.Vertical.Bg:Resize(16, obj.H - 16)
+        obj.Sliders.Vertical.Slider:Resize(16, 48 / self.ScrollH * self.H)
+        self:Move() --update slider position
     end
+    obj:Resize() --update slider size
+    function obj:EnableSlider(enableX, enableY)
+        self.ScrollLeftRight, self.ScrollUpDown = enableX, enableY
+        self.Sliders.Vertical.Bg.Visible = self.ScrollUpDown
+        self.Sliders.Vertical.Slider.Visible = self.ScrollUpDown
+        self.Sliders.Horizontal.Bg.Visible = self.ScrollLeftRight
+        self.Sliders.Horizontal.Slider.Visible = self.ScrollLeftRight
+    end
+    obj:EnableSlider(false, true)
     local ogChangeZ = obj.ChangeZ
     function obj:ChangeZ(z, layer)
-        ogChangeZ(z, layer)
+        ogChangeZ(self, z, layer)
         for _,frame in pairs(self.Attached) do --update the z and stuffz
             frame[1].Clips.W, frame[1].Clips.H = self.W, self.H
         end
@@ -687,14 +736,12 @@ function mod:NewScrollbar(x,y,w,h,z,layer,ax,ay)
     obj.Collision.OnScroll = function(delta)
         local dx = obj.ScrollLeftRight and LD.Settings.ScrollSpeed * delta or 0
         local dy = obj.ScrollUpDown and LD.Settings.ScrollSpeed * delta or 0
-        print(obj.HasXScrollPriority, dx, dy)
         if obj.HasXScrollPriority and dx ~= 0 then
             dy = 0
         elseif not obj.HasXScrollPriority and dy ~= 0 then
             dx = 0
         end
-        print(dx, dy)
-        obj:Scroll(dx, dy)
+        obj:SafeScroll(dx, dy)
     end
     --[[
         TODO:
