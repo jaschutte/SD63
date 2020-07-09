@@ -89,52 +89,44 @@ local function drawFunc(obj) --fixed it yeya
 end
 
 local function insertFrame(fr) --inserts a frame carefully, doesn't ruin layering
-    local placed = false
-    local temp = {}
-    if #mod.FramesOnZ == 0 then
-        placed = true
-        temp[1] = fr
-    else
-        for id,frame in ipairs(mod.FramesOnZ) do
-            if placed then
-                temp[id+1] = frame
-            else
-                if fr.Layer == "Menu" then
-                    if frame.Layer == "Menu" then
-                        if fr.Z < frame.Z then
-                            placed = true
-                            temp[id] = fr
-                            temp[id+1] = frame
-                        else
-                            temp[id] = frame
-                        end
-                    else
-                        temp[id] = frame
-                    end
-                else
-                    if frame.Layer == "Menu" then
-                        temp[id] = frame
-                    else
-                        if fr.Z < frame.Z then
-                            placed = true
-                            temp[id] = fr
-                            temp[id+1] = frame
-                        else
-                            temp[id] = frame
-                        end
-                    end
-                end
-            end
-        end
-        if not placed then
-            placed = true
-            temp[#mod.FramesOnZ+1] = fr
+    local groups = { --disect the list into groups
+        Menu = {};
+        f = {};
+        b = {};
+        r = {};
+    }
+    for i = 1, mod.TotalFrames do
+        local frame = mod.FramesOnZ[i]
+        groups[frame.Layer][#groups[frame.Layer]+1] = frame
+    end
+    mod.FramesOnZ = {}
+
+    local pos = #groups[fr.Layer] + 1
+    for i,frame in ipairs(groups[fr.Layer]) do --get the point where to stop
+        if frame.Z > fr.Z then
+            pos = i
+            break
         end
     end
-    for id,frame in pairs(temp) do
-        mod.FramesOnZ[id] = frame
+    for i = #groups[fr.Layer], pos, -1 do --loop back and shift everyone 1 position up
+        groups[fr.Layer][i + 1] = groups[fr.Layer][i]
     end
-    mod.TotalFrames = #mod.FramesOnZ
+    groups[fr.Layer][pos] = fr --and finally add the frame
+
+    for _,frame in ipairs(groups.f) do --re-essemble the frames back in order
+        mod.FramesOnZ[#mod.FramesOnZ+1] = frame
+    end
+    for _,frame in ipairs(groups.b) do
+        mod.FramesOnZ[#mod.FramesOnZ+1] = frame
+    end
+    for _,frame in ipairs(groups.r) do
+        mod.FramesOnZ[#mod.FramesOnZ+1] = frame
+    end
+    for _,frame in ipairs(groups.Menu) do
+        mod.FramesOnZ[#mod.FramesOnZ+1] = frame
+    end
+
+    mod.TotalFrames = mod.TotalFrames + 1 --increment the total
 end
 
 local function removeFrame(fr) --removes a frame carefully, so it doesn't messup layering
@@ -718,6 +710,10 @@ function mod:NewScrollbar(x,y,w,h,z,layer,ax,ay)
         for _,frame in pairs(self.Attached) do --update the z and stuffz
             frame[1].Clips.W, frame[1].Clips.H = self.W, self.H
         end
+        self.Sliders.Horizontal.Bg:ChangeZ(self.Z + 1, self.Layer)
+        self.Sliders.Horizontal.Slider:ChangeZ(self.Z + 2, self.Layer)
+        self.Sliders.Vertical.Bg:ChangeZ(self.Z + 1, self.Layer)
+        self.Sliders.Vertical.Slider:ChangeZ(self.Z + 2, self.Layer)
     end
     function obj:Attach(frame, offx, offy, z)
         z = z or 1
