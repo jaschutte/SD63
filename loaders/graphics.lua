@@ -621,6 +621,7 @@ function mod:NewScrollbar(x,y,w,h,z,layer,ax,ay)
     obj.ScrollUpDown = true --this only effects the scroll by mouse, does not limit the scroll function
     obj.ScrollLeftRight = true --this only effects the scroll by mouse, does not limit the scroll function
     obj.HasXScrollPriority = true --this only effects the scroll by mouse, does not limit the scroll function
+    obj.IsSliderDown = false --is a slider currently being pressed?
     obj.Sliders = {
         Horizontal = {
             Bg = mod:NewFrame(0, 0, 0, 0, obj.Z + 1, obj.Layer, 0, 0);
@@ -642,14 +643,23 @@ function mod:NewScrollbar(x,y,w,h,z,layer,ax,ay)
     obj.Sliders.Vertical.Slider.ScreenPosition = true obj.Sliders.Vertical.Bg.ScreenPosition = true
     obj.Sliders.Horizontal.Slider.ApplyZoom = false obj.Sliders.Horizontal.Bg.ApplyZoom = false
     obj.Sliders.Vertical.Slider.ApplyZoom = false obj.Sliders.Vertical.Bg.ApplyZoom = false
-    obj.Sliders.Horizontal.Slider.Collision.OnEnter = nil obj.Sliders.Horizontal.Slider.Collision.OnLeave = nil
-    obj.Sliders.Horizontal.Slider.Collision.DetectHover = true --enabling hover for the bar
-    obj.Sliders.Vertical.Slider.Collision.OnEnter = nil obj.Sliders.Vertical.Slider.Collision.OnLeave = nil
-    obj.Sliders.Vertical.Slider.Collision.DetectHover = true --enabling hover for the bar
+    obj.Sliders.Horizontal.Slider.Collision.OnClick = function()
+        obj.IsSliderDown = true
+    end
+    obj.Sliders.Horizontal.Slider.Collision.OnUp = function()
+        obj.IsSliderDown = false
+    end
+    obj.Sliders.Vertical.Slider.Collision.OnClick = function()
+        obj.IsSliderDown = true
+    end
+    obj.Sliders.Vertical.Slider.Collision.OnUp = function()
+        obj.IsSliderDown = false
+    end
     --Warning ugly code above
     obj.Attached = {}
     local ogMove = obj.Move
     function obj:SafeScroll(dX, dY) --the function used by the scroll functions
+        dX, dY = self.ScrollLeftRight and dX or 0, self.ScrollUpDown and dY or 0
         local x, y = clamp(self.ScrollX + dX, -self.ScrollW, 0), clamp(self.ScrollY + dY, -self.ScrollH, 0)
         obj:Scroll(x - self.ScrollX, y - self.ScrollY)
     end
@@ -735,6 +745,7 @@ function mod:NewScrollbar(x,y,w,h,z,layer,ax,ay)
         att[#att+1] = obj.Sliders.Horizontal.Slider
         att[#att+1] = obj.Sliders.Vertical.Bg
         att[#att+1] = obj.Sliders.Vertical.Slider
+        collection:RemoveTag(obj, "Scrollbars")
         mod:MassDelete(att)
     end --can't override :Destroy(), it sometimes doesn't get called due to MassDelete(), so this is more 'safer'
     obj.Collision.OnScroll = function(delta)
@@ -747,12 +758,7 @@ function mod:NewScrollbar(x,y,w,h,z,layer,ax,ay)
         end
         obj:SafeScroll(dx, dy)
     end
-    --[[
-        TODO:
-        add a scrollbar for those without a scrollwheel
-            Almost done
-    ]]
-    collection:AddTag(obj, "Scrollbars", {obj.Sliders.Horizontal.Slider, obj.Sliders.Vertical.Slider})
+    collection:AddTag(obj, "Scrollbars", {0, 0, obj.Sliders.Horizontal.Slider, obj.Sliders.Vertical.Slider})
     return obj
 end
 
@@ -1036,8 +1042,18 @@ function mod:OnText(key) --luckily this doesn't fire when OnKeyPress fires, so i
     end
 end
 
-function mod:UpdateMessages(dt) --update the messages so their state updates
-    local now = os.clock()
+function mod:Update(dt) --gets called every frame, yes ik we now have 2 update functions shhhhh
+    --scrollbars
+    collection:MapTag("Scrollbars", function(obj, sliders)
+        if obj.IsSliderDown then
+            local dX, dY = sliders[1] - ToolSettings.MouseX, sliders[2] - ToolSettings.MouseY
+            obj:SafeScroll(dX, dY)
+        end
+        sliders[1], sliders[2] = ToolSettings.MouseX, ToolSettings.MouseY
+        return sliders
+    end)
+
+    local now = os.clock() --update the messages
     for _,message in pairs(mod.Messages) do
         if message.State == "alive" and now > message.RunOutAt then
             message.State = "fade"

@@ -25,10 +25,15 @@ function mod:HasTag(instance, tag) --check if an instance has a tag, if the tag 
     return self.Tags[tag] and self.Tags[tag][instance] or false
 end
 
-function mod:MapTag(tag, func) --applies a function to each member of a tag, the arguments are the tag itself and it's value
-    assert(self.Tags[tag], "Can't map a function to a non-existant tag!")
-    for tag, value in pairs(self.Tags[tag]) do
-        func(tag, value)
+function mod:MapTag(tag, func) --applies a function to each member of a tag
+    --the arguments given to the function are the instances and the values, it can return the new values, if nil it stays the same
+    if self.Tags[tag] then
+        for inst, value in pairs(self.Tags[tag]) do
+            local new = func(inst, value)
+            if new and self.Tags[tag] and self.Tags[tag][inst] then
+                self.Tags[tag][inst] = new
+            end
+        end
     end
 end
 

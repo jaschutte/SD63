@@ -463,7 +463,7 @@ function love.update(dt)
     --update modules
     items:Update()
     tools:Update()
-    graphics:UpdateMessages(dt)
+    graphics:Update(dt)
     threads:OnFrame()
 end
 
