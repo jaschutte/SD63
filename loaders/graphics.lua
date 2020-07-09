@@ -2,6 +2,7 @@
 local mod = {}
 
 local threads = require("loaders.threading")
+local collection = require("loaders.collection")
 local floor, min, max = math.floor, math.min, math.max
 mod.Frames = {}
 mod.FramesOnZ = {}
@@ -641,6 +642,10 @@ function mod:NewScrollbar(x,y,w,h,z,layer,ax,ay)
     obj.Sliders.Vertical.Slider.ScreenPosition = true obj.Sliders.Vertical.Bg.ScreenPosition = true
     obj.Sliders.Horizontal.Slider.ApplyZoom = false obj.Sliders.Horizontal.Bg.ApplyZoom = false
     obj.Sliders.Vertical.Slider.ApplyZoom = false obj.Sliders.Vertical.Bg.ApplyZoom = false
+    obj.Sliders.Horizontal.Slider.Collision.OnEnter = nil obj.Sliders.Horizontal.Slider.Collision.OnLeave = nil
+    obj.Sliders.Horizontal.Slider.Collision.DetectHover = true --enabling hover for the bar
+    obj.Sliders.Vertical.Slider.Collision.OnEnter = nil obj.Sliders.Vertical.Slider.Collision.OnLeave = nil
+    obj.Sliders.Vertical.Slider.Collision.DetectHover = true --enabling hover for the bar
     --Warning ugly code above
     obj.Attached = {}
     local ogMove = obj.Move
@@ -721,18 +726,17 @@ function mod:NewScrollbar(x,y,w,h,z,layer,ax,ay)
     function obj:DeAttach(frame) --this is sad gamer moment
         self.Attached[frame.Id] = nil
     end
-    local ogDelete = obj.Destroy
-    function obj:Destroy()
+    obj.AponDeletion[GetId()] = function() --destroy everyone muhahaha
         local att = {}
-        for id,frame in pairs(self.Attached) do
+        for id,frame in pairs(obj.Attached) do
             att[id] = frame[1]
         end
+        att[#att+1] = obj.Sliders.Horizontal.Bg
+        att[#att+1] = obj.Sliders.Horizontal.Slider
+        att[#att+1] = obj.Sliders.Vertical.Bg
+        att[#att+1] = obj.Sliders.Vertical.Slider
         mod:MassDelete(att)
-        ogDelete(self) --self destruct!
-    end
-    --[[obj.Collision.OnEnter = nil
-    obj.Collision.OnLeave = nil
-    obj.Collision.DetectHover = true--]]
+    end --can't override :Destroy(), it sometimes doesn't get called due to MassDelete(), so this is more 'safer'
     obj.Collision.OnScroll = function(delta)
         local dx = obj.ScrollLeftRight and LD.Settings.ScrollSpeed * delta or 0
         local dy = obj.ScrollUpDown and LD.Settings.ScrollSpeed * delta or 0
@@ -746,7 +750,9 @@ function mod:NewScrollbar(x,y,w,h,z,layer,ax,ay)
     --[[
         TODO:
         add a scrollbar for those without a scrollwheel
+            Almost done
     ]]
+    collection:AddTag(obj, "Scrollbars", {obj.Sliders.Horizontal.Slider, obj.Sliders.Vertical.Slider})
     return obj
 end
 
