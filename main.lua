@@ -36,6 +36,7 @@ _G.PrintTable = function(...)
     end
 end
 _G.ToolSettings = {
+    ItemsFirst = false;
     BlockInput = false;
     CurrentDisplay = false;
     UIBlockingMouse = false;
@@ -408,6 +409,9 @@ function love.keypressed(key)
     if key == "lctrl" then
         ToolSettings.CtrlDown = true
     end
+    if key == "x" then
+        ToolSettings.ItemsFirst = not ToolSettings.ItemsFirst --switch between the 2 view modes
+    end
     graphics:OnKeyPress(key) --update the textboxes
     if not ToolSettings.BlockInput then --if a textbox is being editing, ignore the signal
         tools:OnKeyPress(key) --update the tools library
@@ -482,7 +486,10 @@ function love.draw()
     love.graphics.setColor(0,0,.8)
     love.graphics.rectangle("fill",dx,dy,dw,dh)
     love.graphics.setColor(1,1,1)
-
+    graphics:DrawTiles(1) --draw the bg tiles
+    if ToolSettings.ItemsFirst then --if items are infront of tiles then:
+        graphics:DrawTiles(2)
+    end
     local pause = 0
     for index, frame in ipairs(graphics.FramesOnZ) do
         if frame.Layer == "f" or frame.Layer == "Menu" then --draw items infront of tiles
@@ -493,7 +500,9 @@ function love.draw()
             frame:Draw()
         end
     end
-    graphics:DrawTiles()
+    if not ToolSettings.ItemsFirst then --if that's not the case
+        graphics:DrawTiles(2) --draw normal tiles
+    end
     graphics:DrawHovers()
     for index = pause, graphics.TotalFrames do --draw the items which are positioned after the tiles
         local frame = graphics.FramesOnZ[index]
@@ -503,6 +512,14 @@ function love.draw()
     end
     love.graphics.setFont(Fonts.Fallback)
     graphics:DrawMessages()
+    if ToolSettings.ItemsFirst then --draw the outlines if firsts from view mode is selected
+        local og = love.graphics.getLineWidth()
+        love.graphics.setColor(0, .6, 0)
+        love.graphics.setLineWidth(3)
+        love.graphics.line(0,1, 0,WindowY, WindowX,WindowY, WindowX,0, 0,1)
+        love.graphics.setColor(1, 1, 1, 1)
+        love.graphics.setLineWidth(og)
+    end
     --display framerate
     love.graphics.setColor(1,1,1)
     love.graphics.print("FPS: "..love.timer.getFPS(),5,WindowY-20)

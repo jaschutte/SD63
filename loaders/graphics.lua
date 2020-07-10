@@ -837,7 +837,7 @@ function mod:AddMessage(message,lifespan) --add a little message to the bottem o
     return obj
 end
 
-function mod:DrawTiles()
+function mod:DrawTiles(state)
     love.graphics.setColor(1, 1, 1, 1)
     local lvl, textures = LD.Level, Textures.TileTextures
     if mod.ReDrawTiles then
@@ -846,13 +846,17 @@ function mod:DrawTiles()
         mod.BgTilesCanvas = love.graphics.newCanvas(lvl.Size.X * 32 + 32, lvl.Size.Y * 32 + 32)
         love.graphics.setCanvas(mod.TilesCanvas)
         love.graphics.clear() --clear the canvas
-        local isBgCanvas = false
+        love.graphics.setCanvas(mod.BgTilesCanvas)
+        love.graphics.clear()
+        local isBgCanvas = true
         for x = 1, lvl.Size.X do --loop through everything
             for y = 1, lvl.Size.Y do
-                if bgTiles[textures[lvl.Tiles[x][y]]] and not isBgCanvas then
+                if bgTiles[lvl.Tiles[x][y]] and not isBgCanvas then
                     love.graphics.setCanvas(mod.BgTilesCanvas)
-                elseif isBgCanvas then
+                    isBgCanvas = true
+                elseif isBgCanvas and not bgTiles[lvl.Tiles[x][y]] then
                     love.graphics.setCanvas(mod.TilesCanvas)
+                    isBgCanvas = false
                 end
                 love.graphics.draw(textures[lvl.Tiles[x][y]], x * 32, y * 32)
             end
@@ -861,7 +865,11 @@ function mod:DrawTiles()
         mod.ReDrawTiles = false
     end
     local px, py = mod:TileToScreen(0, 0) --calculate the offset
-    love.graphics.draw(mod.TilesCanvas, px, py, 0, CameraPosition.Z, CameraPosition.Z)
+    if state == 1 then --1 = bg
+        love.graphics.draw(mod.BgTilesCanvas, px, py, 0, CameraPosition.Z, CameraPosition.Z)
+    elseif state == 2 then --2 = normal tiles
+        love.graphics.draw(mod.TilesCanvas, px, py, 0, CameraPosition.Z, CameraPosition.Z)
+    end
 end
 
 function mod:DrawHovers()
