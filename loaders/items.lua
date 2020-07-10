@@ -16,6 +16,7 @@
 local graphics = require("loaders.graphics")
 local windows = require("loaders.window")
 local modHandler = require("loaders.modhandler")
+local collection = require("loaders.collection")
 
 local mod = {}
 mod.DisplayForStat = {}
@@ -116,6 +117,7 @@ function mod:Init()
             else
                 button:SetColours(unpack(Colours.WindowUI.DoubleOptionField2))
             end
+            item.Stats.Dict[key] = button.Text
         end
         if third then
             if button.Text == first then --update the colours
@@ -129,9 +131,6 @@ function mod:Init()
             button:SetColours(unpack(Colours.WindowUI.DoubleOptionField1))
         else
             button:SetColours(unpack(Colours.WindowUI.DoubleOptionField2))
-        end
-        button.OnCompletion = function()
-            item.Stats.Dict[key] = button.Text
         end
         button.FontColour = {
             R = Colours.WindowUI.NormalTextColour[1] or 0,
@@ -552,6 +551,10 @@ function mod:GetStats(item)
         Stats = {item.ItemId, item.Frame.X, item.Frame.Y, 0, item.Frame.Z, "Front"};
         Desc = {"Item Id", "X", "Y", "Disable AI", "Z Index", "Layer"};
     }
+    if item.ItemId == 1 then
+        stats.Stats[#stats.Stats] = nil
+        stats.Desc[#stats.Desc] = nil
+    end
     local l = #stats.Desc --get the length for the offset
     local special = self.SpecialStats[tostring(item.ItemId)]
     if special then --if there are special stats, add them here
@@ -593,7 +596,6 @@ function mod:GetStats(item)
             elseif key == "ZIndex" then --can't combined layer and index into one due to we not knowing the index of either
                 item.Frame:ChangeZ(val)
             elseif key == "Layer" then
-                print(val == "Front" and "b" or val == "Back" and "r" or "f")
                 item.Frame:ChangeZ(nil, val == "Front" and "b" or val == "Back" and "r" or "f")
             elseif key == "Depth" then
                 if initialised then
@@ -646,8 +648,16 @@ function mod:New(id, x, y) --create new
     local item = {}
     item.Id = GetId()
     item.ItemId = id
-    item.Frame = graphics:NewFrame(x, y, nil, nil, 1, "f") --create the frame for the item (including img)
-    print(item.Frame.Layer, "AA")
+    local _z = collection:CountTag("Items", true) + 1
+    if id == 1 then
+        collection:MapTag("Marios", function(mario) --find them
+            collection:RemoveTag(mario, "Marios") --remove their dignity
+            mario:Destroy() --then destroy them
+        end)
+        collection:AddTag(item, "Marios")
+        _z = math.huge
+    end
+    item.Frame = graphics:NewFrame(x, y, nil, nil, _z, "b") --create the frame for the item (including img)
     item.Frame:SetImage(Textures.ItemTextures[id])
     item.Frame:Resize(item.Frame.ImageData.W, item.Frame.ImageData.H)
     item.Frame.Visible = true
@@ -816,9 +826,11 @@ function mod:New(id, x, y) --create new
         end
     end
     function item:Destroy()
+        collection:RemoveTag(item, "Items")
         LD.Level.Items[self.Id] = nil
         self.Frame:Destroy()
     end
+    collection:AddTag(item, "Items")
     LD.Level.Items[item.Id] = item
     if not ToolSettings.ShiftDown then
         ToolSettings.ItemTool = "move"

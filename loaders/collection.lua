@@ -13,11 +13,14 @@
 
 local mod = {}
 mod.Tags = {}
+mod.Count = {}
 
 function mod:AddTag(instance, tag, val) --add a tag to an instance, optional value
     if not self.Tags[tag] then
         self.Tags[tag] = {}
+        self.Count[tag] = 0
     end
+    self.Count[tag] = self.Count[tag] + 1
     self.Tags[tag][instance] = val or true --if no value was given, just give it true
 end
 
@@ -37,9 +40,19 @@ function mod:MapTag(tag, func) --applies a function to each member of a tag
     end
 end
 
+function mod:CountTag(tag, ignoreWarning)
+    if self.Count[tag] then
+        return self.Count[tag]
+    elseif not ignoreWarning then
+        print("WARNING: Counting an existant tag. Tag: "..tag)
+    end
+    return 0
+end
+
 function mod:RemoveTag(instance, tag) --remove the tag from an instance
     if self.Tags[tag] then
         self.Tags[tag][instance] = nil
+        self.Count[tag] = self.Count[tag] - 1
     else
         print("WARNING: Untagging an instance from an non existant tag. Tag: "..tag.." Instance: "..instance)
     end

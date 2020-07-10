@@ -321,7 +321,6 @@ function mod:NewFrame(x,y,w,h,z,layer,ax,ay)
     function obj:ChangeZ(z, layer)
         obj.Z = z or obj.Z
         obj.Layer = layer or obj.Layer
-        print(obj.Layer, layer)
         removeFrame(obj)
         insertFrame(obj)
     end
