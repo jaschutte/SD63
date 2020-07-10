@@ -16,6 +16,7 @@ function mod:SetTileFinal(x,y,id,ignoreRecording) --does not check, if tile is i
     if not ignoreRecording then
         mod.REC[#mod.REC+1] = {x,y,id}
     end
+    graphics.ReDrawTiles = true --update the flag so it redraws the canvas at the end of this frame
     LD.Level.Tiles[x][y] = id
 end
 

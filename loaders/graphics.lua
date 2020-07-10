@@ -13,6 +13,9 @@ mod.DrawTileSelection = false
 mod.TotalFrames = 0
 mod._RECALC_ON_SCRN_EVERY = 20
 --mod.ItemSpriteBatch = love.graphics.newSpriteBatch() --group all items in here maybe?
+mod.TilesCanvas = love.graphics.newCanvas()
+mod.BgTilesCanvas = love.graphics.newCanvas()
+mod.ReDrawTiles = false
 
 local function polyPoint(px, py, verts) --modified version from the one available on the love2d forums
     local next, collision = 3, false
@@ -100,7 +103,6 @@ local function insertFrame(fr) --inserts a frame carefully, doesn't ruin layerin
         groups[frame.Layer][#groups[frame.Layer]+1] = frame
     end
     mod.FramesOnZ = {}
-
     local pos = #groups[fr.Layer] + 1
     for i,frame in ipairs(groups[fr.Layer]) do --get the point where to stop
         if frame.Z > fr.Z then
@@ -113,13 +115,14 @@ local function insertFrame(fr) --inserts a frame carefully, doesn't ruin layerin
     end
     groups[fr.Layer][pos] = fr --and finally add the frame
 
-    for _,frame in ipairs(groups.f) do --re-essemble the frames back in order
+    --re-essemble the frames back in order
+    for _,frame in ipairs(groups.r) do --Back; behind mario
         mod.FramesOnZ[#mod.FramesOnZ+1] = frame
     end
-    for _,frame in ipairs(groups.b) do
+    for _,frame in ipairs(groups.b) do --Front; front of mario behind tiles
         mod.FramesOnZ[#mod.FramesOnZ+1] = frame
     end
-    for _,frame in ipairs(groups.r) do
+    for _,frame in ipairs(groups.f) do --Top; front of mario infront tiles
         mod.FramesOnZ[#mod.FramesOnZ+1] = frame
     end
     for _,frame in ipairs(groups.Menu) do
@@ -219,7 +222,7 @@ function mod:NewFrame(x,y,w,h,z,layer,ax,ay)
     obj.W = w or 0
     obj.H = h or 0
     obj.Z = z or 0
-    obj.Layer = layer or "r"
+    obj.Layer = layer or "b"
     obj.Mirror = false
     obj.R = 0
     obj.AnchorX = ax or 0.5
@@ -318,6 +321,7 @@ function mod:NewFrame(x,y,w,h,z,layer,ax,ay)
     function obj:ChangeZ(z, layer)
         obj.Z = z or obj.Z
         obj.Layer = layer or obj.Layer
+        print(obj.Layer, layer)
         removeFrame(obj)
         insertFrame(obj)
     end
@@ -834,27 +838,30 @@ function mod:AddMessage(message,lifespan) --add a little message to the bottem o
 end
 
 function mod:DrawTiles()
+    love.graphics.setColor(1, 1, 1, 1)
     local lvl, textures = LD.Level, Textures.TileTextures
-    local tx, ty = mod:ScreenToTile(0,0)
-    local bx, by = mod:ScreenToTile(WindowX,WindowY)
-    tx, ty = max(1,tx), max(1,ty)
-    bx, by = min(lvl.Size.X,bx), min(lvl.Size.Y,by)
-    local dx, dy = mod:TileToScreen(tx,ty)
-    local dw, dh = mod:TileToScreen(bx+1,by+1)
-    dw, dh = dw-dx, dh-dy
-    love.graphics.setColor(0,0,.8)
-    love.graphics.rectangle("fill",dx,dy,dw,dh)
-    love.graphics.setColor(1,1,1)
-    for x = tx,bx do
-        for y = ty,by do
-            local px, py = mod:TileToScreen(x,y)
-            love.graphics.draw(
-                textures[lvl.Tiles[x][y]],
-                floor(px), floor(py), 0,
-                CameraPosition.Z, CameraPosition.Z
-            )
+    if mod.ReDrawTiles then
+        local bgTiles = {["0"] = true} --make this into a module or something later
+        mod.TilesCanvas = love.graphics.newCanvas(lvl.Size.X * 32 + 32, lvl.Size.Y * 32 + 32)
+        mod.BgTilesCanvas = love.graphics.newCanvas(lvl.Size.X * 32 + 32, lvl.Size.Y * 32 + 32)
+        love.graphics.setCanvas(mod.TilesCanvas)
+        love.graphics.clear() --clear the canvas
+        local isBgCanvas = false
+        for x = 1, lvl.Size.X do --loop through everything
+            for y = 1, lvl.Size.Y do
+                if bgTiles[textures[lvl.Tiles[x][y]]] and not isBgCanvas then
+                    love.graphics.setCanvas(mod.BgTilesCanvas)
+                elseif isBgCanvas then
+                    love.graphics.setCanvas(mod.TilesCanvas)
+                end
+                love.graphics.draw(textures[lvl.Tiles[x][y]], x * 32, y * 32)
+            end
         end
+        love.graphics.setCanvas()
+        mod.ReDrawTiles = false
     end
+    local px, py = mod:TileToScreen(0, 0) --calculate the offset
+    love.graphics.draw(mod.TilesCanvas, px, py, 0, CameraPosition.Z, CameraPosition.Z)
 end
 
 function mod:DrawHovers()

@@ -249,6 +249,7 @@ function love.load()
         end
     end
     LD.Level.Size = {X = 50, Y = 30}
+    graphics.ReDrawTiles = true
     menu:InitMenu()
     --[[for i = 1,2000 do --a fun little test
         items:New(math.random(1, 40), math.random(1, 1028), math.random(1, 1028))
@@ -260,6 +261,9 @@ function love.resize(sx,sy)
     WindowX, WindowY = sx, sy
     LD.Settings.ToolHolder.SizeY = LD.Settings.ToolHolder.SizeY+dy
     LD.Settings.ToolHolder.X = LD.Settings.ToolHolder.X+dx
+    --update the canvas size and redraw it
+    graphics.TilesCanvas = love.graphics.newCanvas()
+    graphics.ReDrawTiles = true
     --update menu
     menu.OnResize()
 end
@@ -468,9 +472,31 @@ function love.update(dt)
 end
 
 function love.draw()
+    local tx, ty = graphics:ScreenToTile(0,0) --draw the background colour
+    local bx, by = graphics:ScreenToTile(WindowX,WindowY)
+    tx, ty = math.max(1,tx), math.max(1,ty)
+    bx, by = math.min(LD.Level.Size.X,bx), math.min(LD.Level.Size.Y,by)
+    local dx, dy = graphics:TileToScreen(tx,ty)
+    local dw, dh = graphics:TileToScreen(bx+1,by+1)
+    dw, dh = dw-dx, dh-dy
+    love.graphics.setColor(0,0,.8)
+    love.graphics.rectangle("fill",dx,dy,dw,dh)
+    love.graphics.setColor(1,1,1)
+
+    local pause = 0
+    for index, frame in ipairs(graphics.FramesOnZ) do
+        if frame.Layer == "f" or frame.Layer == "Menu" then --draw items infront of tiles
+            pause = index
+            break
+        end
+        if frame.OnScreen and frame.Visible then
+            frame:Draw()
+        end
+    end
     graphics:DrawTiles()
     graphics:DrawHovers()
-    for _,frame in ipairs(graphics.FramesOnZ) do
+    for index = pause, graphics.TotalFrames do --draw the items which are positioned after the tiles
+        local frame = graphics.FramesOnZ[index]
         if frame.OnScreen and frame.Visible then
             frame:Draw()
         end

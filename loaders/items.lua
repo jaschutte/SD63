@@ -273,7 +273,7 @@ function mod:Init()
     --layer & z index
     self.DisplayForStat.Layer = function(item, key, val, x, y, w, h, window)
         defLabel(key, x, y, w, h, window)
-        defaultDir(item, key, val, x, y, w, h, window, "Mixed", "Front", "Back")
+        defaultDir(item, key, val, x, y, w, h, window, "Front", "Back", "Top")
     end
     self.DisplayForStat.ZIndex = function(item, key, val, x, y, w, h, window)
         defLabel(key, x, y, w, h, window)
@@ -549,7 +549,7 @@ end
 function mod:GetStats(item)
     --39 & 40 [4][5] = X, Y
     local stats = {
-        Stats = {item.ItemId, item.Frame.X, item.Frame.Y, 0, item.Frame.Z, item.Frame.Layer};
+        Stats = {item.ItemId, item.Frame.X, item.Frame.Y, 0, item.Frame.Z, "Front"};
         Desc = {"Item Id", "X", "Y", "Disable AI", "Z Index", "Layer"};
     }
     local l = #stats.Desc --get the length for the offset
@@ -593,7 +593,8 @@ function mod:GetStats(item)
             elseif key == "ZIndex" then --can't combined layer and index into one due to we not knowing the index of either
                 item.Frame:ChangeZ(val)
             elseif key == "Layer" then
-                item.Frame:ChangeZ(nil, val == "Mixed" and "r" or val == "Front" and "f" or "b")
+                print(val == "Front" and "b" or val == "Back" and "r" or "f")
+                item.Frame:ChangeZ(nil, val == "Front" and "b" or val == "Back" and "r" or "f")
             elseif key == "Depth" then
                 if initialised then
                     local delta = item.Frame.H - val
@@ -606,7 +607,7 @@ function mod:GetStats(item)
                     item.Frame:Move(item.Frame.X - delta/2)
                 end
                 item.Frame:Resize(val)
-            elseif key == "Color" or key == "BlockType" or key == "PlatformSize" then
+            elseif key == "Color" or key == "BlockType" or key == "PlatformSize" or key == "Frame" then
                 if item.ItemPreview then
                     local skin = Textures.ItemSkins[tostring(item.ItemId)]
                     if skin and skin[tostring(val)] then
@@ -645,7 +646,8 @@ function mod:New(id, x, y) --create new
     local item = {}
     item.Id = GetId()
     item.ItemId = id
-    item.Frame = graphics:NewFrame(x, y, nil, nil, 1) --create the frame for the item (including img)
+    item.Frame = graphics:NewFrame(x, y, nil, nil, 1, "f") --create the frame for the item (including img)
+    print(item.Frame.Layer, "AA")
     item.Frame:SetImage(Textures.ItemTextures[id])
     item.Frame:Resize(item.Frame.ImageData.W, item.Frame.ImageData.H)
     item.Frame.Visible = true
