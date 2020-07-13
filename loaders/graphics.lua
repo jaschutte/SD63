@@ -392,6 +392,12 @@ function mod:NewText(x,y,w,h,z,layer,ax,ay)
         A = 0.5;
         _Draw = {};
     }
+    function obj:SetFontColours(r,g,b,a)
+        obj.FontColour.R = r or obj.FontColour.R
+        obj.FontColour.G = g or obj.FontColour.G
+        obj.FontColour.B = b or obj.FontColour.B
+        obj.FontColour.A = a or obj.FontColour.A
+    end
     function obj:SetHint(enabled, hint)
         self.Hint.Enabled = enabled or self.Hint.Enabled
         hint = hint or ""
@@ -494,9 +500,24 @@ function mod:NewText(x,y,w,h,z,layer,ax,ay)
     function obj:Draw() --override the draw command
         drawFunc(self)
         love.graphics.setFont(self.Font)
-        love.graphics.setScissor(self.X, self.Y, self.W, self.H)
+        if self.Clips.H ~= 0 and self.Clips.W ~= 0 then
+            love.graphics.setScissor( --get the smallest clips that there is
+                max(self.X, self.Clips.X), max(self.Y, self.Clips.Y),
+                min(self.W, self.Clips.W), min(self.H, self.Clips.H)
+            )
+        else
+            love.graphics.setScissor(
+                self.X, self.Y,
+                self.W, self.H
+            )
+        end
         love.graphics.setColor(self.FontColour.R, self.FontColour.B, self.FontColour.G, self.FontColour.A)
-        love.graphics.print(self.Text, self.X + self.SizePerCharacter.W * self.TextOffsetX, self.Y + self.SizePerCharacter.H * self.TextOffsetY)
+        local tW, tH = self.Font:getWidth(self.Text), self.Font:getHeight(self.Text)
+        love.graphics.print(
+            self.Text,
+            floor(self.X + self.W * self.TextOffsetX - tW * self.TextOffsetX),
+            floor(self.Y + self.H * self.TextOffsetY - tH * self.TextOffsetY)
+        )
         love.graphics.setColor(self.TextSelection.R, self.TextSelection.B, self.TextSelection.G, self.TextSelection.A)
         for _,draw in pairs(self.TextSelection._Draw) do --for the textselection
             love.graphics.rectangle("fill", self.X + draw[1], self.Y + draw[2], draw[3], draw[4])
@@ -677,6 +698,7 @@ function mod:NewScrollbar(x,y,w,h,z,layer,ax,ay)
         end
         for _,frame in pairs(self.Attached) do --update the clips
             frame[1].Clips.X, frame[1].Clips.Y = self.X, self.Y
+            frame[1].Clips.W, frame[1].Clips.H = self.W, self.H
             frame[1]:Move(self.X + frame[2], self.Y + frame[3])
         end
         obj.Sliders.Horizontal.Bg:Move(obj.X, obj.Y + obj.H - 16)
@@ -1061,6 +1083,9 @@ function mod:Update(dt) --gets called every frame, yes ik we now have 2 update f
             if obj.WindowParent then
                 obj.WindowParent._EnableClose = os.clock() + 0.5
             end
+            print()
+            dX = sliders[3].Collision.IsDown and dX or 0
+            dY = sliders[4].Collision.IsDown and dY or 0
             obj:SafeScroll(dX, dY)
         end
         sliders[1], sliders[2] = ToolSettings.MouseX, ToolSettings.MouseY
