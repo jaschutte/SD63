@@ -99,10 +99,10 @@ end
 }, true)--]]
 
 function mod:OpenEditor(id)
-    local window = windows:NewWindow(ToolSettings.MouseX - 230, ToolSettings.MouseY - 150, 300, 200)
+    local window = windows:NewWindow(ToolSettings.MouseX - 230, ToolSettings.MouseY - 150, 150, 200)
     window:SetScaling(true)
     window:SetTitle("Value Editor")
-    local main = graphics:NewScrollbar(0, 16, 300, 186)
+    local main = graphics:NewScrollbar(0, 16, 150, 186)
     main.WindowParent = window
     main:SetColours(0, 0, 0, 0)
     main:EnableSlider(true, true)
@@ -112,7 +112,7 @@ function mod:OpenEditor(id)
     window.OnResize = function(w, h)
         main:Resize(w, h - 16)
     end
-    main.ScrollW = 100
+    main:SetScrollSize(300, 300)
     main:Resize()
     local fancyMode = graphics:NewText(0, 0, 80, 20)
     fancyMode.TextOffsetX, fancyMode.TextOffsetY = 0.5, 0.5

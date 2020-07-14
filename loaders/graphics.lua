@@ -633,6 +633,8 @@ function mod:NewScrollbar(x,y,w,h,z,layer,ax,ay)
     obj.AnchorX, obj.AnchorY = 0, 0
     obj.ScrollW = obj.W
     obj.ScrollH = obj.H
+    obj.RawW = obj.ScrollW
+    obj.RawH = obj.ScrollH
     obj.ScrollX, obj.ScrollY = 0, 0 --as usual, don't set these directly, use the scroll function
     obj.ScrollUpDown = true --this only effects the scroll by mouse, does not limit the scroll function
     obj.ScrollLeftRight = true --this only effects the scroll by mouse, does not limit the scroll function
@@ -714,11 +716,18 @@ function mod:NewScrollbar(x,y,w,h,z,layer,ax,ay)
         for _,frame in pairs(self.Attached) do --update the clips
             frame[1]:ChangeZ(self.Z + frame[4], self.Layer)
         end
-        obj.Sliders.Horizontal.Bg:Resize(obj.W - 16, 16)
-        obj.Sliders.Horizontal.Slider:Resize(48 / self.ScrollW * self.W, 16)
-        obj.Sliders.Vertical.Bg:Resize(16, obj.H - 16)
-        obj.Sliders.Vertical.Slider:Resize(16, 48 / self.ScrollH * self.H)
+        self.ScrollW = max(0, obj.RawW - self.W)
+        self.ScrollH = max(0, obj.RawH - self.H)
+        self.Sliders.Horizontal.Bg:Resize(obj.W - 16, 16)
+        self.Sliders.Horizontal.Slider:Resize((self.W - 16) * (self.ScrollW / self.RawW), 16)
+        self.Sliders.Vertical.Bg:Resize(16, obj.H - 16)
+        self.Sliders.Vertical.Slider:Resize(16, (self.H - 16) * (self.ScrollH / self.RawH))
         self:Move() --update slider position
+    end
+    function obj:SetScrollSize(w, h)
+        self.ScrollW = w and max(0, w - self.W) or self.ScrollW
+        self.ScrollH = h and max(0, h - self.H) or self.ScrollH
+        obj.RawW, obj.RawH = w, h
     end
     obj:Resize() --update slider size
     function obj:EnableSlider(enableX, enableY)
@@ -1083,7 +1092,6 @@ function mod:Update(dt) --gets called every frame, yes ik we now have 2 update f
             if obj.WindowParent then
                 obj.WindowParent._EnableClose = os.clock() + 0.5
             end
-            print()
             dX = sliders[3].Collision.IsDown and dX or 0
             dY = sliders[4].Collision.IsDown and dY or 0
             obj:SafeScroll(dX, dY)
